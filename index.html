@@ -1,666 +1,331 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ระบบเติม-ถอนเงินนักเรียน</title>
-  
-  <!-- Tailwind CSS -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  
-  <!-- Font Sarabun -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-  
-  <!-- Font Awesome Icons -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  
-  <!-- SweetAlert2 -->
-  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-  
-  <!-- HTML5 QR Code Scanner -->
-  <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
-
-  <style>
-    * {
-      font-family: 'Sarabun', sans-serif;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>School Wallet - ระบบจัดการเติม-ถอนเงินดิจิทัล</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts Prompt -->
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Prompt', sans-serif; background-color: #f1f5f9; }
+        .bg-glass { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); }
+    </style>
 </head>
-<body class="bg-slate-100 min-h-screen flex justify-center items-center p-2 md:p-4">
+<body class="min-h-screen pb-12">
 
-  <div class="w-full max-w-md bg-white min-h-[90vh] rounded-3xl shadow-2xl flex flex-col justify-between overflow-hidden relative border border-slate-100">
-    
-    <!-- HEADER -->
-    <div class="bg-gradient-to-r from-blue-700 to-indigo-800 text-white p-5 rounded-b-3xl shadow-lg">
-      <div class="flex justify-between items-center mb-2">
-        <div class="flex items-center space-x-2">
-          <i class="fa-solid fa-wallet text-2xl text-amber-300"></i>
-          <span class="font-bold text-lg tracking-wide">School Wallet</span>
-        </div>
-        <div id="adminBadge" class="hidden text-xs bg-white/20 backdrop-blur-md px-3 py-1 rounded-full flex items-center gap-2 border border-white/30">
-          <span id="adminName"><i class="fa-solid fa-user-shield text-emerald-300 mr-1"></i>Admin</span>
-          <button onclick="logoutAdmin()" class="text-rose-300 hover:text-rose-100 ml-1" title="ออกจากระบบ">
-            <i class="fa-solid fa-right-from-bracket"></i>
-          </button>
-        </div>
-      </div>
-      <p class="text-xs text-blue-100">ระบบจัดการบริการ เติม-ถอนเงินดิจิทัลโรงเรียน</p>
-    </div>
-
-    <!-- MAIN CONTAINER -->
-    <div class="p-4 flex-1 overflow-y-auto space-y-4" id="mainContent">
-
-      <!-- STEP 1: ADMIN LOGIN -->
-      <div id="loginSection" class="space-y-4 my-auto pt-6">
-        <div class="text-center">
-          <div class="w-20 h-20 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-3 shadow-inner">
-            <i class="fa-solid fa-lock text-3xl"></i>
-          </div>
-          <h2 class="text-xl font-bold text-slate-800">เข้าสู่ระบบแอดมิน</h2>
-          <p class="text-xs text-slate-500">กรอกรหัสแอดมินเพื่อเริ่มทำรายการ</p>
-        </div>
-
-        <div class="space-y-3">
-          <div class="relative">
-            <i class="fa-solid fa-key absolute left-4 top-3.5 text-slate-400"></i>
-            <input type="password" id="adminIdInput" placeholder="รหัสผู้ดูแลระบบ ( Admin ID )" class="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none transition-all">
-          </div>
-          <button onclick="loginAdmin()" class="w-full bg-blue-600 hover:bg-blue-700 active:scale-95 text-white py-3.5 rounded-xl font-semibold shadow-md shadow-blue-200 transition-all">
-            <i class="fa-solid fa-right-to-bracket mr-2"></i> เข้าสู่ระบบ
-          </button>
-        </div>
-      </div>
-
-      <!-- STEP 2: APP DASHBOARD -->
-      <div id="appSection" class="hidden space-y-5">
-
-        <!-- SELECT MODE: TOPUP / WITHDRAW -->
-        <div class="grid grid-cols-2 gap-3 bg-slate-100 p-1.5 rounded-2xl">
-          <button id="btnModeTopup" onclick="setTransactionType('topup')" class="py-2.5 rounded-xl font-bold text-sm transition-all bg-emerald-500 text-white shadow-md flex items-center justify-center gap-2">
-            <i class="fa-solid fa-circle-plus"></i> เติมเงิน
-          </button>
-          <button id="btnModeWithdraw" onclick="setTransactionType('withdraw')" class="py-2.5 rounded-xl font-bold text-sm transition-all text-slate-600 flex items-center justify-center gap-2">
-            <i class="fa-solid fa-circle-minus"></i> ถอนเงิน
-          </button>
-        </div>
-
-        <!-- AMOUNT SELECTION -->
-        <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100 space-y-3">
-          <label class="block text-xs font-semibold text-slate-600 uppercase tracking-wider">เลือกจำนวนเงิน (บาท)</label>
-          <div class="grid grid-cols-3 gap-2">
-            <button onclick="selectAmount(5)" class="amt-btn bg-white border border-slate-200 hover:border-blue-500 font-bold py-2.5 rounded-xl text-slate-700 hover:text-blue-600 shadow-sm active:scale-95 transition-all">5</button>
-            <button onclick="selectAmount(10)" class="amt-btn bg-white border border-slate-200 hover:border-blue-500 font-bold py-2.5 rounded-xl text-slate-700 hover:text-blue-600 shadow-sm active:scale-95 transition-all">10</button>
-            <button onclick="selectAmount(20)" class="amt-btn bg-white border border-slate-200 hover:border-blue-500 font-bold py-2.5 rounded-xl text-slate-700 hover:text-blue-600 shadow-sm active:scale-95 transition-all">20</button>
-            <button onclick="selectAmount(50)" class="amt-btn bg-white border border-slate-200 hover:border-blue-500 font-bold py-2.5 rounded-xl text-slate-700 hover:text-blue-600 shadow-sm active:scale-95 transition-all">50</button>
-            <button onclick="selectAmount(100)" class="amt-btn bg-white border border-slate-200 hover:border-blue-500 font-bold py-2.5 rounded-xl text-slate-700 hover:text-blue-600 shadow-sm active:scale-95 transition-all">100</button>
-            <button onclick="enableCustomAmount()" class="amt-btn bg-amber-50 border border-amber-200 text-amber-700 font-bold py-2.5 rounded-xl shadow-sm active:scale-95 transition-all">ระบุเอง</button>
-          </div>
-          
-          <div class="relative">
-            <input type="number" id="customAmountInput" placeholder="ระบุจำนวนเงินสด" class="w-full pl-4 pr-10 py-3 bg-white border border-slate-300 rounded-xl font-bold text-slate-800 text-center text-lg focus:ring-2 focus:ring-blue-500 focus:outline-none">
-            <span class="absolute right-4 top-3.5 text-slate-400 font-bold">฿</span>
-          </div>
-        </div>
-
-        <!-- IDENTIFY STUDENT METHOD -->
-        <div class="space-y-3">
-          <button onclick="openQrScanner()" class="w-full bg-gradient-to-r from-indigo-600 to-blue-600 text-white py-3.5 rounded-xl font-bold shadow-lg shadow-indigo-100 active:scale-95 transition-all flex items-center justify-center gap-2">
-            <i class="fa-solid fa-qrcode text-lg"></i> สแกน QR Code นักเรียน
-          </button>
-
-          <div class="flex items-center my-2">
-            <div class="flex-1 border-t border-slate-200"></div>
-            <span class="px-3 text-xs text-slate-400 font-medium">หรือ</span>
-            <div class="flex-1 border-t border-slate-200"></div>
-          </div>
-
-          <div class="flex gap-2">
-            <input type="text" id="manualStudentId" placeholder="กรอกรหัสนักเรียน / RFID" class="flex-1 pl-4 pr-3 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none text-sm">
-            <button onclick="searchStudentManual()" class="bg-slate-800 hover:bg-slate-900 text-white px-4 py-3 rounded-xl font-semibold active:scale-95 transition-all">
-              <i class="fa-solid fa-magnifying-glass"></i>
-            </button>
-          </div>
-        </div>
-
-      </div>
-
-      <!-- STEP 3: HISTORY & DASHBOARD SECTION -->
-      <div id="historySection" class="hidden space-y-4">
-        
-        <!-- DASHBOARD FILTER BAR -->
-        <div class="bg-slate-50 p-3 rounded-2xl border border-slate-200 space-y-2">
-          <div class="flex justify-between items-center text-xs font-bold text-slate-700">
-            <span><i class="fa-solid fa-filter text-blue-600 mr-1"></i>ตัวกรองรายงาน</span>
-            <button onclick="loadHistory()" class="text-blue-600 hover:underline"><i class="fa-solid fa-rotate-right mr-1"></i>รีเฟรช</button>
-          </div>
-          
-          <div class="grid grid-cols-2 gap-2">
-            <select id="filterType" onchange="handleFilterTypeChange()" class="bg-white border border-slate-200 rounded-xl px-2 py-1.5 text-xs font-semibold text-slate-700 focus:outline-none">
-              <option value="day">รายวัน (Daily)</option>
-              <option value="month">รายเดือน (Monthly)</option>
-              <option value="year">รายปี (Yearly)</option>
-            </select>
-            <input type="date" id="filterDate" onchange="loadHistory()" class="bg-white border border-slate-200 rounded-xl px-2 py-1.5 text-xs font-semibold text-slate-700 focus:outline-none">
-          </div>
-        </div>
-
-        <!-- DASHBOARD SUMMARY CARDS -->
-        <div class="grid grid-cols-3 gap-2">
-          <div class="bg-emerald-50 border border-emerald-100 p-2.5 rounded-2xl text-center">
-            <div class="text-[10px] font-bold text-emerald-600 uppercase">ยอดเติมรวม</div>
-            <div id="dashDeposit" class="text-xs font-bold text-emerald-700 mt-1">0 ฿</div>
-          </div>
-          <div class="bg-rose-50 border border-rose-100 p-2.5 rounded-2xl text-center">
-            <div class="text-[10px] font-bold text-rose-600 uppercase">ยอดถอนรวม</div>
-            <div id="dashWithdraw" class="text-xs font-bold text-rose-700 mt-1">0 ฿</div>
-          </div>
-          <div class="bg-blue-50 border border-blue-100 p-2.5 rounded-2xl text-center">
-            <div class="text-[10px] font-bold text-blue-600 uppercase">สุทธิ</div>
-            <div id="dashNet" class="text-xs font-bold text-blue-700 mt-1">0 ฿</div>
-          </div>
-        </div>
-
-        <!-- HISTORY LIST HEADER -->
-        <div class="flex justify-between items-center pt-1">
-          <h3 class="text-xs font-bold text-slate-700"><i class="fa-solid fa-list-ul mr-1 text-slate-500"></i>รายการฝาก/ถอนเงิน</h3>
-          <span id="historyCount" class="text-[10px] bg-slate-200 text-slate-600 px-2 py-0.5 rounded-full font-bold">0 รายการ</span>
-        </div>
-
-        <!-- LIST CONTAINER -->
-        <div id="historyList" class="space-y-2 max-h-[280px] overflow-y-auto pr-1">
-          <!-- Item Dynamic JS -->
-        </div>
-      </div>
-
-    </div>
-
-    <!-- BOTTOM NAVBAR -->
-    <div id="bottomNav" class="hidden bg-white border-t border-slate-100 p-2 grid grid-cols-2 gap-1 rounded-t-2xl shadow-lg">
-      <button onclick="switchTab('main')" id="navMain" class="py-2 text-center text-blue-600 font-semibold text-xs flex flex-col items-center gap-1">
-        <i class="fa-solid fa-house text-lg"></i> หน้าหลัก
-      </button>
-      <button onclick="switchTab('history')" id="navHistory" class="py-2 text-center text-slate-400 font-semibold text-xs flex flex-col items-center gap-1">
-        <i class="fa-solid fa-chart-pie text-lg"></i> ประวัติ & แดชบอร์ด
-      </button>
-    </div>
-
-  </div>
-
-  <!-- QR SCANNER MODAL -->
-  <div id="qrModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-    <div class="bg-white w-full max-w-sm rounded-3xl p-5 space-y-4 text-center">
-      <div class="flex justify-between items-center">
-        <h3 class="font-bold text-slate-800">สแกน QR Code นักเรียน</h3>
-        <button onclick="closeQrScanner()" class="w-8 h-8 rounded-full bg-slate-100 text-slate-500 flex items-center justify-center"><i class="fa-solid fa-xmark"></i></button>
-      </div>
-      <div id="reader" class="overflow-hidden rounded-2xl bg-black min-h-[250px]"></div>
-      <p class="text-xs text-slate-400">วาง QR Code ให้อยู่ภายในกรอบเพื่อสแกน</p>
-    </div>
-  </div>
-
-  <!-- DETAIL MODAL POPUP -->
-  <div id="detailModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-    <div class="bg-white w-full max-w-sm rounded-3xl p-5 space-y-4 shadow-2xl animate-fade-in">
-      <div class="flex justify-between items-center border-b pb-3">
-        <h3 class="font-bold text-slate-800 text-base"><i class="fa-solid fa-circle-info text-blue-600 mr-2"></i>รายละเอียดรายการ</h3>
-        <button onclick="closeDetailModal()" class="w-8 h-8 rounded-full bg-slate-100 text-slate-500 flex items-center justify-center hover:bg-slate-200"><i class="fa-solid fa-xmark"></i></button>
-      </div>
-      <div id="detailModalBody" class="space-y-3 text-xs text-slate-600">
-        <!-- Dynamic Content -->
-      </div>
-      <button onclick="closeDetailModal()" class="w-full bg-slate-800 hover:bg-slate-900 text-white py-2.5 rounded-xl font-bold text-xs">
-        ปิดหน้าต่าง
-      </button>
-    </div>
-  </div>
-
-  <!-- JS LOGIC -->
-  <script>
-    // ==========================================
-    // CONFIGURATION
-    // ==========================================
-    const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbz4d1l3_HNPVu1YgdEScdNwd2KdbFM_V8fe8cscb7S17BZxVdc035D039kcTCDpt_7TTg/exec";
-
-    let currentAdmin = null;
-    let currentTransactionType = 'topup'; // 'topup' or 'withdraw'
-    let selectedAmount = 0;
-    let html5QrcodeScanner = null;
-    let cachedHistoryData = [];
-
-    // AUTO INIT LOCAL STORAGE LOGIN
-    window.addEventListener('DOMContentLoaded', () => {
-      // Set Default Filter Date to Today
-      const today = new Date().toISOString().split('T')[0];
-      document.getElementById('filterDate').value = today;
-
-      const savedAdmin = localStorage.getItem('school_wallet_admin');
-      if (savedAdmin) {
-        try {
-          currentAdmin = JSON.parse(savedAdmin);
-          showAppMainView();
-        } catch(e) {
-          localStorage.removeItem('school_wallet_admin');
-        }
-      }
-    });
-
-    // Sound Notification API
-    const playSound = (type) => {
-      const ctx = new (window.AudioContext || window.webkitAudioContext)();
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-
-      if (type === 'success') {
-        osc.frequency.setValueAtTime(523.25, ctx.currentTime);
-        osc.frequency.setValueAtTime(659.25, ctx.currentTime + 0.1);
-        gain.gain.setValueAtTime(0.2, ctx.currentTime);
-        osc.start();
-        osc.stop(ctx.currentTime + 0.25);
-      } else {
-        osc.frequency.setValueAtTime(220, ctx.currentTime);
-        osc.frequency.setValueAtTime(164.81, ctx.currentTime + 0.15);
-        gain.gain.setValueAtTime(0.3, ctx.currentTime);
-        osc.start();
-        osc.stop(ctx.currentTime + 0.3);
-      }
-    };
-
-    // CALL GAS API
-    async function apiCall(data) {
-      try {
-        const response = await fetch(GAS_WEB_APP_URL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-          body: JSON.stringify(data)
-        });
-        return await response.json();
-      } catch (err) {
-        console.error(err);
-        return { status: 'error', message: 'ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้' };
-      }
-    }
-
-    // 1. ADMIN LOGIN & LOCAL STORAGE
-    async function loginAdmin() {
-      const adminId = document.getElementById('adminIdInput').value.trim();
-      if (!adminId) {
-        Swal.fire({ icon: 'warning', title: 'แจ้งเตือน', text: 'กรุณากรอกรหัสผู้ดูแลระบบ', confirmColor: '#3085d6' });
-        return;
-      }
-
-      Swal.showLoading();
-      const res = await apiCall({ action: 'loginAdmin', adminId: adminId });
-      Swal.close();
-
-      if (res.allowed) {
-        currentAdmin = res.profile;
-        localStorage.setItem('school_wallet_admin', JSON.stringify(currentAdmin));
-        showAppMainView();
-        
-        playSound('success');
-        Swal.fire({ icon: 'success', title: 'เข้าสู่ระบบสำเร็จ', text: `ยินดีต้อนรับ คุณ${currentAdmin.name}`, timer: 1500, showConfirmButton: false });
-      } else {
-        playSound('error');
-        Swal.fire({ icon: 'error', title: 'เข้าสู่ระบบไม่สำเร็จ', text: res.message || 'ไม่มีสิทธิ์เข้าใช้งาน' });
-      }
-    }
-
-    function logoutAdmin() {
-      Swal.fire({
-        title: 'ยืนยันออกจากระบบ?',
-        icon: 'question',
-        showCancelButton: true,
-        confirmButtonText: 'ออกจากระบบ',
-        cancelButtonText: 'ยกเลิก',
-        confirmButtonColor: '#f43f5e'
-      }).then((result) => {
-        if (result.isConfirmed) {
-          localStorage.removeItem('school_wallet_admin');
-          currentAdmin = null;
-          document.getElementById('adminBadge').classList.add('hidden');
-          document.getElementById('loginSection').classList.remove('hidden');
-          document.getElementById('appSection').classList.add('hidden');
-          document.getElementById('historySection').classList.add('hidden');
-          document.getElementById('bottomNav').classList.add('hidden');
-          document.getElementById('adminIdInput').value = '';
-        }
-      });
-    }
-
-    function showAppMainView() {
-      document.getElementById('adminName').innerHTML = `<i class="fa-solid fa-user-shield text-emerald-300 mr-1"></i>${currentAdmin.name}`;
-      document.getElementById('adminBadge').classList.remove('hidden');
-      document.getElementById('loginSection').classList.add('hidden');
-      document.getElementById('appSection').classList.remove('hidden');
-      document.getElementById('bottomNav').classList.remove('hidden');
-    }
-
-    // MODE SELECTION
-    function setTransactionType(type) {
-      currentTransactionType = type;
-      const btnTopup = document.getElementById('btnModeTopup');
-      const btnWithdraw = document.getElementById('btnModeWithdraw');
-
-      if (type === 'topup') {
-        btnTopup.className = "py-2.5 rounded-xl font-bold text-sm transition-all bg-emerald-500 text-white shadow-md flex items-center justify-center gap-2";
-        btnWithdraw.className = "py-2.5 rounded-xl font-bold text-sm transition-all text-slate-600 flex items-center justify-center gap-2";
-      } else {
-        btnWithdraw.className = "py-2.5 rounded-xl font-bold text-sm transition-all bg-rose-500 text-white shadow-md flex items-center justify-center gap-2";
-        btnTopup.className = "py-2.5 rounded-xl font-bold text-sm transition-all text-slate-600 flex items-center justify-center gap-2";
-      }
-    }
-
-    // AMOUNT SELECTION
-    function selectAmount(amt) {
-      selectedAmount = amt;
-      document.getElementById('customAmountInput').value = amt;
-    }
-
-    function enableCustomAmount() {
-      const input = document.getElementById('customAmountInput');
-      input.value = '';
-      input.focus();
-    }
-
-    // SEARCH & CONFIRM PROCESS
-    async function searchStudentManual() {
-      const id = document.getElementById('manualStudentId').value.trim();
-      if (!id) {
-        Swal.fire({ icon: 'warning', title: 'กรุณากรอกรหัสนักเรียน' });
-        return;
-      }
-      processStudentTransaction(id);
-    }
-
-    async function processStudentTransaction(studentId) {
-      const amount = parseFloat(document.getElementById('customAmountInput').value);
-      if (!amount || amount <= 0) {
-        playSound('error');
-        Swal.fire({ icon: 'warning', title: 'ยอดเงินไม่ถูกต้อง', text: 'กรุณาระบุจำนวนเงินที่ต้องการทำรายการ' });
-        return;
-      }
-
-      Swal.showLoading();
-      const studentRes = await apiCall({ action: 'findStudent', studentId: studentId });
-      Swal.close();
-
-      if (studentRes.status !== 'success') {
-        playSound('error');
-        Swal.fire({ icon: 'error', title: 'ไม่พบข้อมูล', text: studentRes.message });
-        return;
-      }
-
-      const st = studentRes.student;
-      const typeText = currentTransactionType === 'topup' ? 'เติมเงิน' : 'ถอนเงิน';
-      const typeColor = currentTransactionType === 'topup' ? 'text-emerald-600' : 'text-rose-600';
-
-      const confirm = await Swal.fire({
-        title: `ยืนยันการ${typeText}`,
-        html: `
-          <div class="text-left bg-slate-50 p-4 rounded-xl space-y-2 text-sm">
-            <p><strong>ชื่อ-สกุล:</strong> ${st.name}</p>
-            <p><strong>รหัสนักเรียน:</strong> ${st.id} (${st.level})</p>
-            <p><strong>เงินสดคงเหลือ:</strong> ${st.wallet.toLocaleString()} บาท</p>
-            <hr>
-            <p class="text-base font-bold ${typeColor} text-center pt-1">
-              ต้องการ${typeText}จำนวน <span class="text-xl">${amount.toLocaleString()}</span> บาท
-            </p>
-          </div>
-        `,
-        icon: 'question',
-        showCancelButton: true,
-        confirmButtonText: 'ยืนยันทำรายการ',
-        cancelButtonText: 'ยกเลิก',
-        confirmButtonColor: currentTransactionType === 'topup' ? '#10b981' : '#f43f5e'
-      });
-
-      if (confirm.isConfirmed) {
-        Swal.showLoading();
-        const txRes = await apiCall({
-          action: 'processTransaction',
-          studentId: st.id,
-          type: currentTransactionType,
-          accountType: 'wallet',
-          amount: amount,
-          adminName: currentAdmin.name
-        });
-        Swal.close();
-
-        if (txRes.status === 'success') {
-          playSound('success');
-          Swal.fire({
-            icon: 'success',
-            title: 'ทำรายการสำเร็จ',
-            html: `
-              <p class="text-sm">บันทึกข้อมูลเรียบร้อยแล้ว</p>
-              <div class="mt-3 p-3 bg-emerald-50 rounded-xl text-emerald-800 text-sm font-semibold">
-                ยอดเงินสดคงเหลือใหม่: ${txRes.newWalletBalance.toLocaleString()} บาท
-              </div>
-            `,
-            timer: 3000
-          });
-          document.getElementById('manualStudentId').value = '';
-        } else {
-          playSound('error');
-          Swal.fire({ icon: 'error', title: 'ทำรายการไม่สำเร็จ', text: txRes.message });
-        }
-      }
-    }
-
-    // QR SCANNER
-    function openQrScanner() {
-      document.getElementById('qrModal').classList.remove('hidden');
-      html5QrcodeScanner = new Html5Qrcode("reader");
-      html5QrcodeScanner.start(
-        { facingMode: "environment" },
-        { fps: 10, qrbox: { width: 200, height: 200 } },
-        (decodedText) => {
-          closeQrScanner();
-          processStudentTransaction(decodedText);
-        },
-        (errorMessage) => { }
-      ).catch(err => {
-        alert("ไม่สามารถเปิดกล้องได้: " + err);
-        closeQrScanner();
-      });
-    }
-
-    function closeQrScanner() {
-      if (html5QrcodeScanner) {
-        html5QrcodeScanner.stop().then(() => {
-          html5QrcodeScanner.clear();
-          document.getElementById('qrModal').classList.add('hidden');
-        }).catch(() => {
-          document.getElementById('qrModal').classList.add('hidden');
-        });
-      } else {
-        document.getElementById('qrModal').classList.add('hidden');
-      }
-    }
-
-    // NAVIGATION & HISTORY DASHBOARD
-    function switchTab(tab) {
-      if (tab === 'main') {
-        document.getElementById('appSection').classList.remove('hidden');
-        document.getElementById('historySection').classList.add('hidden');
-        document.getElementById('navMain').className = "py-2 text-center text-blue-600 font-semibold text-xs flex flex-col items-center gap-1";
-        document.getElementById('navHistory').className = "py-2 text-center text-slate-400 font-semibold text-xs flex flex-col items-center gap-1";
-      } else {
-        document.getElementById('appSection').classList.add('hidden');
-        document.getElementById('historySection').classList.remove('hidden');
-        document.getElementById('navHistory').className = "py-2 text-center text-blue-600 font-semibold text-xs flex flex-col items-center gap-1";
-        document.getElementById('navMain').className = "py-2 text-center text-slate-400 font-semibold text-xs flex flex-col items-center gap-1";
-        loadHistory();
-      }
-    }
-
-    function handleFilterTypeChange() {
-      const type = document.getElementById('filterType').value;
-      const dateInput = document.getElementById('filterDate');
-      if (type === 'year') {
-        dateInput.type = 'number';
-        dateInput.value = new Date().getFullYear();
-        dateInput.placeholder = 'YYYY';
-      } else if (type === 'month') {
-        dateInput.type = 'month';
-        const now = new Date();
-        dateInput.value = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
-      } else {
-        dateInput.type = 'date';
-        dateInput.value = new Date().toISOString().split('T')[0];
-      }
-      loadHistory();
-    }
-
-    async function loadHistory() {
-      const container = document.getElementById('historyList');
-      container.innerHTML = '<p class="text-center text-slate-400 text-xs py-5">กำลังโหลดประวัติ...</p>';
-
-      const res = await apiCall({ action: 'getHistory' });
-      if (res.status === 'success') {
-        cachedHistoryData = res.history || [];
-        renderFilteredHistory();
-      } else {
-        container.innerHTML = '<p class="text-center text-slate-400 text-xs py-5">เกิดข้อผิดพลาดในการโหลดข้อมูล</p>';
-      }
-    }
-
-    function renderFilteredHistory() {
-      const filterType = document.getElementById('filterType').value;
-      const filterValue = document.getElementById('filterDate').value;
-      const container = document.getElementById('historyList');
-
-      // กรองเฉพาะรายการ คอลัมน์ D ที่มีคำว่า "ฝากเงิน" หรือ "ถอนเงิน"
-      let filtered = cachedHistoryData.filter(item => {
-        const detail = item.detail || '';
-        return detail.includes('ฝากเงิน') || detail.includes('ถอนเงิน');
-      });
-
-      // กรองตามวันที่ / เดือน / ปี
-      if (filterValue) {
-        filtered = filtered.filter(item => {
-          if (!item.date) return false;
-          // แปลงวันที่รองรับรูปแบบภาษาไทยและ ISO
-          const txDate = new Date(item.timestamp);
-          const yyyy = txDate.getFullYear().toString();
-          const mm = String(txDate.getMonth() + 1).padStart(2, '0');
-          const dd = String(txDate.getDate()).padStart(2, '0');
-
-          if (filterType === 'day') {
-            return `${yyyy}-${mm}-${dd}` === filterValue;
-          } else if (filterType === 'month') {
-            return `${yyyy}-${mm}` === filterValue;
-          } else if (filterType === 'year') {
-            return yyyy === filterValue.toString();
-          }
-          return true;
-        });
-      }
-
-      // คำนวณยอดรวมแดชบอร์ด
-      let totalDeposit = 0;
-      let totalWithdraw = 0;
-
-      filtered.forEach(item => {
-        const detail = item.detail || '';
-        if (detail.includes('ฝากเงิน') || item.type.includes('เข้า') || item.type.includes('เติม')) {
-          totalDeposit += item.amount;
-        } else if (detail.includes('ถอนเงิน') || item.type.includes('ออก') || item.type.includes('ถอน')) {
-          totalWithdraw += item.amount;
-        }
-      });
-
-      document.getElementById('dashDeposit').innerText = `${totalDeposit.toLocaleString()} ฿`;
-      document.getElementById('dashWithdraw').innerText = `${totalWithdraw.toLocaleString()} ฿`;
-      document.getElementById('dashNet').innerText = `${(totalDeposit - totalWithdraw).toLocaleString()} ฿`;
-      document.getElementById('historyCount').innerText = `${filtered.length} รายการ`;
-
-      // แสดงผลรายการย่อ (Compact List)
-      if (filtered.length > 0) {
-        container.innerHTML = filtered.map((item, index) => {
-          const isDeposit = item.detail.includes('ฝากเงิน') || item.type.includes('เข้า') || item.type.includes('เติม');
-          const badgeClass = isDeposit ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700';
-          const icon = isDeposit ? 'fa-arrow-down-left' : 'fa-arrow-up-right';
-          const sign = isDeposit ? '+' : '-';
-
-          return `
-            <div onclick="openDetailModal(${index})" class="bg-slate-50 hover:bg-slate-100 border border-slate-200 p-2.5 rounded-xl flex justify-between items-center cursor-pointer transition-all active:scale-[0.98]">
-              <div class="flex items-center space-x-2.5">
-                <div class="w-8 h-8 rounded-full ${badgeClass} flex items-center justify-center font-bold text-xs">
-                  <i class="fa-solid ${icon}"></i>
+    <!-- Navbar / Header -->
+    <div class="max-w-md mx-auto pt-6 px-4">
+        <div class="bg-indigo-900 text-white rounded-3xl p-6 shadow-xl relative overflow-hidden">
+            <div class="absolute -right-4 -bottom-4 bg-indigo-800 rounded-full w-32 h-32 opacity-50 blur-lg"></div>
+            <div class="flex justify-between items-center mb-4 relative z-10">
+                <div class="flex items-center space-x-3">
+                    <div class="bg-amber-400 p-3 rounded-2xl text-indigo-950 shadow-md">
+                        <i class="fa-solid fa-wallet text-2xl"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-xl font-bold leading-tight">School Wallet</h1>
+                        <p class="text-xs text-indigo-200">ระบบจัดการบริการ เติม-ถอนเงินดิจิทัลโรงเรียน</p>
+                    </div>
                 </div>
-                <div>
-                  <div class="font-bold text-slate-800 text-xs">รหัสนักเรียน: ${item.studentId}</div>
-                  <div class="text-[10px] text-slate-400">${item.date}</div>
+                <div id="adminBadge" class="hidden flex items-center space-x-2 bg-indigo-800/80 border border-indigo-700/50 rounded-full py-1 px-3">
+                    <i class="fa-solid fa-user-shield text-amber-400 text-xs"></i>
+                    <span id="adminName" class="text-xs font-medium max-w-[100px] truncate">ผู้ดูแลระบบ</span>
+                    <button onclick="logoutAdmin()" class="text-indigo-300 hover:text-white text-xs ml-1">
+                        <i class="fa-solid fa-right-from-bracket"></i>
+                    </button>
                 </div>
-              </div>
-              <div class="text-right">
-                <div class="font-bold text-xs ${isDeposit ? 'text-emerald-600' : 'text-rose-600'}">
-                  ${sign}${item.amount.toLocaleString()} ฿
-                </div>
-                <div class="text-[9px] text-slate-400">แตะเพื่อดูเพิ่ม <i class="fa-solid fa-chevron-right text-[8px]"></i></div>
-              </div>
             </div>
-          `;
-        }).join('');
-
-        // เก็บ Filtered Sub-list ไว้ใช้อ้างอิงใน Modal
-        window.currentFilteredList = filtered;
-      } else {
-        container.innerHTML = '<p class="text-center text-slate-400 text-xs py-8">ไม่พบประวัติรายการตามเงื่อนไขที่เลือก</p>';
-      }
-    }
-
-    // DETAIL MODAL POPUP LOGIC
-    function openDetailModal(index) {
-      const item = window.currentFilteredList[index];
-      if (!item) return;
-
-      const isDeposit = item.detail.includes('ฝากเงิน') || item.type.includes('เข้า') || item.type.includes('เติม');
-      const typeText = isDeposit ? 'ฝากเงินสด / เติมเงิน' : 'ถอนเงินสด';
-      const statusColor = isDeposit ? 'text-emerald-600' : 'text-rose-600';
-
-      const body = document.getElementById('detailModalBody');
-      body.innerHTML = `
-        <div class="bg-slate-50 p-3 rounded-2xl border border-slate-100 space-y-2">
-          <div class="flex justify-between items-center">
-            <span class="text-slate-400">รหัสทำรายการ (TX ID):</span>
-            <span class="font-mono font-bold text-slate-700">${item.id || '-'}</span>
-          </div>
-          <div class="flex justify-between items-center">
-            <span class="text-slate-400">รหัสนักเรียน:</span>
-            <span class="font-bold text-slate-800 text-sm">${item.studentId}</span>
-          </div>
-          <div class="flex justify-between items-center">
-            <span class="text-slate-400">ประเภทรายการ:</span>
-            <span class="font-bold ${statusColor}">${typeText}</span>
-          </div>
-          <div class="flex justify-between items-center">
-            <span class="text-slate-400">จำนวนเงิน:</span>
-            <span class="font-bold text-base ${statusColor}">${item.amount.toLocaleString()} บาท</span>
-          </div>
-          <div class="flex justify-between items-center">
-            <span class="text-slate-400">วัน-เวลาที่ทำรายการ:</span>
-            <span class="font-semibold text-slate-700">${item.date}</span>
-          </div>
-          <hr class="border-slate-200">
-          <div>
-            <span class="text-slate-400 block mb-1">รายละเอียดเพิ่มเติม:</span>
-            <p class="bg-white p-2 rounded-xl border border-slate-200 font-medium text-slate-700">${item.detail}</p>
-          </div>
         </div>
-      `;
+    </div>
 
-      document.getElementById('detailModal').classList.remove('hidden');
-    }
+    <!-- Main Container -->
+    <div class="max-w-md mx-auto px-4 mt-6 space-y-6">
 
-    function closeDetailModal() {
-      document.getElementById('detailModal').classList.add('hidden');
-    }
-  </script>
+        <!-- Login Screen (ถ้ายังไม่ได้ล็อกอิน) -->
+        <div id="loginSection" class="bg-white rounded-3xl p-6 shadow-sm border border-slate-100">
+            <h2 class="text-lg font-bold text-slate-800 mb-4 flex items-center">
+                <i class="fa-solid fa-lock text-indigo-600 mr-2"></i> เข้าสู่ระบบแอดมิน
+            </h2>
+            <form onsubmit="handleLogin(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs text-slate-500 mb-1">รหัสแอดมิน / เจ้าหน้าที่</label>
+                    <input type="password" id="adminIdInput" required placeholder="กรอกรหัสผู้ดูแลระบบ" 
+                           class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl text-sm focus:outline-none focus:border-indigo-500 focus:bg-white transition-all">
+                </div>
+                <button type="submit" id="loginBtn" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-3 rounded-2xl shadow-lg shadow-indigo-200 transition-all text-sm flex justify-center items-center">
+                    <span>เข้าสู่ระบบ</span>
+                </button>
+            </form>
+        </div>
+
+        <!-- Dashboard / Transaction Section (จะแสดงผลเมื่อล็อกอินแล้ว) -->
+        <div id="appSection" class="hidden space-y-6">
+
+            <!-- Filter Controls -->
+            <div class="bg-white rounded-3xl p-5 shadow-sm border border-slate-100 space-y-4">
+                <div class="flex justify-between items-center">
+                    <h3 class="text-sm font-bold text-slate-700 flex items-center">
+                        <i class="fa-solid fa-filter text-indigo-500 mr-2"></i> ตัวกรองรายงาน
+                    </h3>
+                    <button onclick="fetchHistoryData()" class="text-xs text-indigo-600 hover:text-indigo-800 font-medium flex items-center">
+                        <i class="fa-solid fa-rotate mr-1"></i> รีเฟรช
+                    </button>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <select id="filterType" onchange="handleFilterChange()" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-700 focus:outline-none focus:border-indigo-500">
+                            <option value="daily">รายวัน (Daily)</option>
+                            <option value="monthly">รายเดือน (Monthly)</option>
+                            <option value="yearly">รายปี (Yearly)</option>
+                            <option value="all">ทั้งหมด (All)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <input type="date" id="filterDate" onchange="applyFilters()" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-700 focus:outline-none focus:border-indigo-500">
+                    </div>
+                </div>
+
+                <!-- Stats Overview Summary Card -->
+                <div class="grid grid-cols-3 gap-2 pt-2 border-t border-slate-100">
+                    <div class="bg-emerald-50 rounded-2xl p-3 text-center border border-emerald-100">
+                        <p class="text-[10px] font-medium text-emerald-600">ยอดเติมรวม</p>
+                        <p id="statDeposit" class="text-sm font-bold text-emerald-700 mt-1">0 ฿</p>
+                    </div>
+                    <div class="bg-rose-50 rounded-2xl p-3 text-center border border-rose-100">
+                        <p class="text-[10px] font-medium text-rose-600">ยอดถอนรวม</p>
+                        <p id="statWithdraw" class="text-sm font-bold text-rose-700 mt-1">0 ฿</p>
+                    </div>
+                    <div class="bg-sky-50 rounded-2xl p-3 text-center border border-sky-100">
+                        <p class="text-[10px] font-medium text-sky-600">สุทธิ</p>
+                        <p id="statNet" class="text-sm font-bold text-sky-700 mt-1">0 ฿</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Transaction History List -->
+            <div class="bg-white rounded-3xl p-5 shadow-sm border border-slate-100 space-y-3">
+                <div class="flex justify-between items-center">
+                    <h3 class="text-sm font-bold text-slate-800 flex items-center">
+                        <i class="fa-solid fa-list-check text-indigo-500 mr-2"></i> รายการฝาก/ถอนเงิน
+                    </h3>
+                    <span id="txCountBadge" class="text-[11px] bg-slate-100 text-slate-600 font-medium px-2.5 py-1 rounded-full">0 รายการ</span>
+                </div>
+
+                <!-- Scrollable Items List -->
+                <div id="historyListContainer" class="space-y-2 max-h-[450px] overflow-y-auto pr-1">
+                    <div class="text-center py-8 text-slate-400 text-xs">
+                        <i class="fa-solid fa-spinner fa-spin text-lg mb-2"></i>
+                        <p>กำลังโหลดข้อมูล...</p>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Application Script -->
+    <script>
+        // *** วาง Web App URL ของคุณที่นี่ ***
+        const API_URL = "https://script.google.com/macros/s/AKfycbzz69-T6aX-6l773Q44s6K-3o7L2_9iXN182A/exec"; 
+
+        let globalHistory = [];
+        let currentAdmin = null;
+
+        window.onload = function() {
+            // ตั้งค่าวันที่เริ่มต้นใน Filter เป็นวันปัจจุบัน
+            document.getElementById('filterDate').valueAsDate = new Date();
+            
+            // เช็ค Session แอดมินเดิม
+            const savedAdmin = localStorage.getItem('school_admin_profile');
+            if (savedAdmin) {
+                currentAdmin = JSON.parse(savedAdmin);
+                showAppUI();
+            }
+        };
+
+        // ส่งคำขอ API
+        async function apiCall(payload) {
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify(payload)
+                });
+                const text = await response.text();
+                return JSON.parse(text);
+            } catch (error) {
+                console.error("API Call Error:", error);
+                throw error;
+            }
+        }
+
+        // ระบบ Login
+        async function handleLogin(e) {
+            e.preventDefault();
+            const adminId = document.getElementById('adminIdInput').value.trim();
+            const btn = document.getElementById('loginBtn');
+            btn.disabled = true;
+            btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-2"></i>กำลังตรวจสอบ...`;
+
+            try {
+                const res = await apiCall({ action: 'loginAdmin', adminId: adminId });
+                if (res.allowed) {
+                    currentAdmin = res.profile;
+                    localStorage.setItem('school_admin_profile', JSON.stringify(currentAdmin));
+                    showAppUI();
+                } else {
+                    alert(res.message || 'รหัสผ่านไม่ถูกต้อง');
+                }
+            } catch (err) {
+                alert('เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = `<span>เข้าสู่ระบบ</span>`;
+            }
+        }
+
+        function logoutAdmin() {
+            localStorage.removeItem('school_admin_profile');
+            location.reload();
+        }
+
+        function showAppUI() {
+            document.getElementById('loginSection').classList.add('hidden');
+            document.getElementById('appSection').classList.remove('hidden');
+            document.getElementById('adminBadge').classList.remove('hidden');
+            document.getElementById('adminName').innerText = currentAdmin.name || 'ผู้ดูแลระบบ';
+            fetchHistoryData();
+        }
+
+        // ดึงข้อมูลประวัติจาก Backend
+        async function fetchHistoryData() {
+            const container = document.getElementById('historyListContainer');
+            container.innerHTML = `
+                <div class="text-center py-8 text-slate-400 text-xs">
+                    <i class="fa-solid fa-spinner fa-spin text-lg mb-2 text-indigo-500"></i>
+                    <p>กำลังโหลดประวัติการทำรายการทุกแถว...</p>
+                </div>`;
+
+            try {
+                const res = await apiCall({ action: 'getHistory' });
+                if (res.status === 'success') {
+                    globalHistory = res.history || [];
+                    applyFilters();
+                } else {
+                    container.innerHTML = `<div class="text-center py-6 text-rose-500 text-xs">${res.message}</div>`;
+                }
+            } catch (err) {
+                container.innerHTML = `<div class="text-center py-6 text-rose-500 text-xs">ไม่สามารถโหลดข้อมูลได้</div>`;
+            }
+        }
+
+        function handleFilterChange() {
+            const filterType = document.getElementById('filterType').value;
+            const dateInput = document.getElementById('filterDate');
+            dateInput.disabled = (filterType === 'all');
+            applyFilters();
+        }
+
+        // ตัวกรองรายการประวัติ (Filter)
+        function applyFilters() {
+            const filterType = document.getElementById('filterType').value;
+            const selectedDateVal = document.getElementById('filterDate').value;
+            const selectedDate = selectedDateVal ? new Date(selectedDateVal) : new Date();
+
+            let filtered = globalHistory.filter(item => {
+                const itemDate = new Date(item.timestamp);
+                
+                if (filterType === 'daily') {
+                    return itemDate.getFullYear() === selectedDate.getFullYear() &&
+                           itemDate.getMonth() === selectedDate.getMonth() &&
+                           itemDate.getDate() === selectedDate.getDate();
+                } else if (filterType === 'monthly') {
+                    return itemDate.getFullYear() === selectedDate.getFullYear() &&
+                           itemDate.getMonth() === selectedDate.getMonth();
+                } else if (filterType === 'yearly') {
+                    return itemDate.getFullYear() === selectedDate.getFullYear();
+                }
+                return true; // 'all'
+            });
+
+            renderHistoryList(filtered);
+            calculateStats(filtered);
+        }
+
+        // แปลงเวลา timestamp เป็นรูปแบบวันไทย
+        function formatThaiDateTime(timeMs) {
+            const d = new Date(timeMs);
+            const day = String(d.getDate()).padStart(2, '0');
+            const month = String(d.getMonth() + 1).padStart(2, '0');
+            const year = d.getFullYear();
+            const hours = String(d.getHours()).padStart(2, '0');
+            const mins = String(d.getMinutes()).padStart(2, '0');
+            return `${day}/${month}/${year} ${hours}:${mins}`;
+        }
+
+        // แสดงผลรายการ
+        function renderHistoryList(items) {
+            const container = document.getElementById('historyListContainer');
+            document.getElementById('txCountBadge').innerText = `${items.length} รายการ`;
+
+            if (items.length === 0) {
+                container.innerHTML = `<div class="text-center py-8 text-slate-400 text-xs">ไม่พบประวัติรายการตามเงื่อนไขที่เลือก</div>`;
+                return;
+            }
+
+            let html = '';
+            items.forEach(item => {
+                const isDeposit = item.type.includes('เข้า') || item.detail.includes('ฝาก');
+                const badgeColor = isDeposit ? 'text-emerald-600 bg-emerald-50' : 'text-rose-600 bg-rose-50';
+                const sign = isDeposit ? '+' : '-';
+                const amountFormatted = item.amount.toLocaleString('th-TH');
+
+                html += `
+                    <div class="flex items-center justify-between p-3.5 bg-slate-50/80 rounded-2xl border border-slate-100 hover:bg-white transition-all">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-10 h-10 rounded-full ${badgeColor} flex items-center justify-center font-bold text-sm">
+                                <i class="fa-solid ${isDeposit ? 'fa-arrow-down-left' : 'fa-arrow-up-right'}"></i>
+                            </div>
+                            <div>
+                                <p class="text-xs font-bold text-slate-800">รหัสนักเรียน: ${item.studentId}</p>
+                                <p class="text-[10px] text-slate-400 mt-0.5">${formatThaiDateTime(item.timestamp)}</p>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-sm font-bold ${isDeposit ? 'text-emerald-600' : 'text-rose-600'}">${sign}${amountFormatted} ฿</p>
+                            <p class="text-[10px] text-slate-400 mt-0.5 max-w-[120px] truncate">${item.detail}</p>
+                        </div>
+                    </div>
+                `;
+            });
+
+            container.innerHTML = html;
+        }
+
+        // คำนวณยอดรวมแสดงผล
+        function calculateStats(items) {
+            let totalDeposit = 0;
+            let totalWithdraw = 0;
+
+            items.forEach(item => {
+                const isDeposit = item.type.includes('เข้า') || item.detail.includes('ฝาก');
+                if (isDeposit) {
+                    totalDeposit += item.amount;
+                } else {
+                    totalWithdraw += item.amount;
+                }
+            });
+
+            const net = totalDeposit - totalWithdraw;
+
+            document.getElementById('statDeposit').innerText = `${totalDeposit.toLocaleString('th-TH')} ฿`;
+            document.getElementById('statWithdraw').innerText = `${totalWithdraw.toLocaleString('th-TH')} ฿`;
+            document.getElementById('statNet').innerText = `${net.toLocaleString('th-TH')} ฿`;
+        }
+    </script>
 </body>
 </html>
