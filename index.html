@@ -132,7 +132,7 @@
               <option value="year">รายปี (Yearly)</option>
               <option value="all">ทั้งหมด (All)</option>
             </select>
-            <input type="date" id="dashFilterDate" onchange="renderDashboardView()" class="bg-white border border-slate-200 rounded-xl px-2 py-1.5 text-xs font-semibold text-slate-700 focus:outline-none">
+            <input type="date" id="dashFilterDate" onchange="loadHistoryData()" class="bg-white border border-slate-200 rounded-xl px-2 py-1.5 text-xs font-semibold text-slate-700 focus:outline-none">
           </div>
         </div>
 
@@ -191,7 +191,7 @@
               <option value="year">รายปี (Yearly)</option>
               <option value="all">ทั้งหมด (All)</option>
             </select>
-            <input type="date" id="histFilterDate" onchange="renderHistoryView()" class="bg-white border border-slate-200 rounded-xl px-2 py-1.5 text-xs font-semibold text-slate-700 focus:outline-none">
+            <input type="date" id="histFilterDate" onchange="loadHistoryData()" class="bg-white border border-slate-200 rounded-xl px-2 py-1.5 text-xs font-semibold text-slate-700 focus:outline-none">
           </div>
         </div>
 
@@ -208,13 +208,13 @@
 
         <!-- LIST CONTAINER -->
         <div id="historyList" class="space-y-2 max-h-[320px] overflow-y-auto pr-1">
-          <!-- Item Dynamic JS -->
+          <!-- Dynamic JS -->
         </div>
       </div>
 
     </div>
 
-    <!-- 1. BOTTOM NAVBAR (FIXED AT BOTTOM) -->
+    <!-- BOTTOM NAVBAR -->
     <div id="bottomNav" class="hidden fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-md bg-white border-t border-slate-200 p-2 grid grid-cols-3 gap-1 rounded-t-2xl shadow-2xl z-40">
       <button onclick="switchTab('main')" id="navMain" class="py-2 text-center text-blue-600 font-semibold text-xs flex flex-col items-center gap-1 transition-all">
         <i class="fa-solid fa-house text-lg"></i> หน้าหลัก
@@ -241,7 +241,7 @@
     </div>
   </div>
 
-  <!-- 3. DETAIL MODAL POPUP (WITH VOID BUTTON) -->
+  <!-- DETAIL MODAL POPUP -->
   <div id="detailModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
     <div class="bg-white w-full max-w-sm rounded-3xl p-5 space-y-4 shadow-2xl">
       <div class="flex justify-between items-center border-b pb-3">
@@ -607,13 +607,12 @@
       }
     }
 
-    // 2. RENDER DASHBOARD
-    function renderDashboardView() {
+    // RENDER DASHBOARD
+    async function renderDashboardView() {
       let totalTopup = 0;
       let totalWithdraw = 0;
       let totalTransfer = 0;
       let totalPayment = 0;
-      let storeMap = {};
 
       cachedRawHistory.forEach(item => {
         const type = (item.type || '').toLowerCase();
@@ -628,13 +627,6 @@
           totalTransfer += amt;
         } else if (detail.includes('ชำระ') || detail.includes('ซื้อ') || detail.includes('ร้าน')) {
           totalPayment += amt;
-
-          let storeName = "ร้านค้าทั่วไป";
-          if (item.detail.includes("ร้าน")) {
-            storeName = item.detail.split("ร้าน")[1].split(" ")[0].trim();
-            storeName = "ร้าน " + storeName;
-          }
-          storeMap[storeName] = (storeMap[storeName] || 0) + amt;
         }
       });
 
@@ -643,19 +635,32 @@
       document.getElementById('dashTotalTransfer').innerText = `${totalTransfer.toLocaleString()} ฿`;
       document.getElementById('dashTotalPayment').innerText = `${totalPayment.toLocaleString()} ฿`;
 
-      const storeList = document.getElementById('storeStatsList');
-      const stores = Object.keys(storeMap);
-      document.getElementById('storeCount').innerText = `${stores.length} ร้าน`;
+      // ดึงยอดขายแต่ละร้านค้าตรงจากชีท "ข้อมูลร้านค้า"
+      const filterType = document.getElementById('dashFilterType').value;
+      const filterValue = document.getElementById('dashFilterDate').value;
 
-      if (stores.length > 0) {
-        storeList.innerHTML = stores.map(store => `
-          <div class="flex justify-between items-center bg-white p-2.5 rounded-xl border border-slate-100 text-xs">
-            <span class="font-semibold text-slate-700"><i class="fa-solid fa-shop text-amber-500 mr-2"></i>${store}</span>
-            <span class="font-bold text-slate-800">${storeMap[store].toLocaleString()} ฿</span>
-          </div>
-        `).join('');
-      } else {
-        storeList.innerHTML = `<p class="text-center text-slate-400 text-xs py-4">ไม่มีรายการชำระค่าสินค้าช่วงนี้</p>`;
+      const res = await apiCall({
+        action: 'getStoreSales',
+        filterType: filterType,
+        filterValue: filterValue
+      });
+
+      const storeList = document.getElementById('storeStatsList');
+
+      if (res.status === 'success' && res.stores) {
+        const storeNames = Object.keys(res.stores);
+        document.getElementById('storeCount').innerText = `${storeNames.length} ร้าน`;
+
+        if (storeNames.length > 0) {
+          storeList.innerHTML = storeNames.map(storeName => `
+            <div class="flex justify-between items-center bg-white p-2.5 rounded-xl border border-slate-100 text-xs">
+              <span class="font-semibold text-slate-700"><i class="fa-solid fa-shop text-amber-500 mr-2"></i>${storeName}</span>
+              <span class="font-bold text-slate-800">${res.stores[storeName].toLocaleString()} ฿</span>
+            </div>
+          `).join('');
+        } else {
+          storeList.innerHTML = `<p class="text-center text-slate-400 text-xs py-4">ไม่พบข้อมูลร้านค้าในระบบ</p>`;
+        }
       }
     }
 
@@ -759,7 +764,7 @@
       selectedDetailItem = null;
     }
 
-    // 3. CANCEL & VOID
+    // CANCEL & VOID
     async function cancelAndVoidTransaction() {
       if (!selectedDetailItem) return;
 
@@ -794,7 +799,7 @@
       }
     }
 
-    // 4. EXPORT EXCEL (.XLS)
+    // EXPORT EXCEL (.XLS)
     function exportToExcel(type) {
       let excelContent = "";
       let filename = "";
