@@ -3,38 +3,27 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ระบบเติม-ถอนเงินนักเรียน</title>
+  <title>ระบบเติม-ถอนเงินนักเรียน & แดชบอร์ด</title>
   
-  <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
-  
-  <!-- Font Sarabun -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-  
-  <!-- Font Awesome Icons -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  
-  <!-- SweetAlert2 -->
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-  
-  <!-- HTML5 QR Code Scanner -->
   <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
 
   <style>
-    * {
-      font-family: 'Sarabun', sans-serif;
-    }
+    * { font-family: 'Sarabun', sans-serif; }
   </style>
 </head>
-<body class="bg-slate-100 min-h-screen flex justify-center items-center p-2 md:p-4">
+<body class="bg-slate-100 min-h-screen flex justify-center items-center p-2 md:p-4 pb-20">
 
-  <div class="w-full max-w-md bg-white min-h-[90vh] rounded-3xl shadow-2xl flex flex-col justify-between overflow-hidden relative border border-slate-100">
+  <div class="w-full max-w-md bg-white min-h-[88vh] rounded-3xl shadow-2xl flex flex-col justify-between overflow-hidden relative border border-slate-100 mb-12">
     
     <!-- HEADER -->
-    <div class="bg-gradient-to-r from-blue-700 to-indigo-800 text-white p-5 rounded-b-3xl shadow-lg">
-      <div class="flex justify-between items-center mb-2">
+    <div class="bg-gradient-to-r from-blue-700 to-indigo-800 text-white p-5 rounded-b-3xl shadow-lg shrink-0">
+      <div class="flex justify-between items-center mb-1">
         <div class="flex items-center space-x-2">
           <i class="fa-solid fa-wallet text-2xl text-amber-300"></i>
           <span class="font-bold text-lg tracking-wide">School Wallet</span>
@@ -46,7 +35,7 @@
           </button>
         </div>
       </div>
-      <p class="text-xs text-blue-100">ระบบจัดการบริการ เติม-ถอนเงินดิจิทัลโรงเรียน</p>
+      <p class="text-[11px] text-blue-100">ระบบบริการดิจิทัล และสรุปรายงานการเงินโรงเรียน</p>
     </div>
 
     <!-- MAIN CONTAINER -->
@@ -73,7 +62,7 @@
         </div>
       </div>
 
-      <!-- STEP 2: APP DASHBOARD -->
+      <!-- STEP 2: APP MAIN (TOPUP / WITHDRAW) -->
       <div id="appSection" class="hidden space-y-5">
 
         <!-- SELECT MODE: TOPUP / WITHDRAW -->
@@ -126,42 +115,90 @@
 
       </div>
 
-      <!-- STEP 3: HISTORY & DASHBOARD SECTION -->
-      <div id="historySection" class="hidden space-y-4">
+      <!-- STEP 3: DASHBOARD TAB -->
+      <div id="dashboardSection" class="hidden space-y-4">
         
-        <!-- DASHBOARD FILTER BAR -->
+        <!-- FILTER BAR -->
         <div class="bg-slate-50 p-3 rounded-2xl border border-slate-200 space-y-2">
           <div class="flex justify-between items-center text-xs font-bold text-slate-700">
-            <span><i class="fa-solid fa-filter text-blue-600 mr-1"></i>ตัวกรองรายงาน</span>
-            <button onclick="loadHistory()" class="text-blue-600 hover:underline"><i class="fa-solid fa-rotate-right mr-1"></i>รีเฟรช</button>
+            <span><i class="fa-solid fa-filter text-blue-600 mr-1"></i>ตัวกรองรายงานแดชบอร์ด</span>
+            <button onclick="loadHistoryData()" class="text-blue-600 hover:underline"><i class="fa-solid fa-rotate-right mr-1"></i>รีเฟรช</button>
           </div>
           
           <div class="grid grid-cols-2 gap-2">
-            <select id="filterType" onchange="handleFilterTypeChange()" class="bg-white border border-slate-200 rounded-xl px-2 py-1.5 text-xs font-semibold text-slate-700 focus:outline-none">
+            <select id="dashFilterType" onchange="handleFilterTypeChange('dash')" class="bg-white border border-slate-200 rounded-xl px-2 py-1.5 text-xs font-semibold text-slate-700 focus:outline-none">
               <option value="day">รายวัน (Daily)</option>
               <option value="month">รายเดือน (Monthly)</option>
               <option value="year">รายปี (Yearly)</option>
               <option value="all">ทั้งหมด (All)</option>
             </select>
-            <input type="date" id="filterDate" onchange="renderFilteredHistory()" class="bg-white border border-slate-200 rounded-xl px-2 py-1.5 text-xs font-semibold text-slate-700 focus:outline-none">
+            <input type="date" id="dashFilterDate" onchange="renderDashboardView()" class="bg-white border border-slate-200 rounded-xl px-2 py-1.5 text-xs font-semibold text-slate-700 focus:outline-none">
           </div>
         </div>
 
+        <!-- EXPORT EXCEL BUTTON -->
+        <button onclick="exportToExcel('dashboard')" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-2 rounded-xl text-xs font-bold flex items-center justify-center gap-2 shadow-sm transition-all">
+          <i class="fa-solid fa-file-excel"></i> ดาวน์โหลดรายงานแดชบอร์ด (.XLS)
+        </button>
+
         <!-- DASHBOARD SUMMARY CARDS -->
-        <div class="grid grid-cols-3 gap-2">
-          <div class="bg-emerald-50 border border-emerald-100 p-2.5 rounded-2xl text-center">
-            <div class="text-[10px] font-bold text-emerald-600 uppercase">ยอดเติมรวม</div>
-            <div id="dashDeposit" class="text-xs font-bold text-emerald-700 mt-1">0 ฿</div>
+        <div class="grid grid-cols-2 gap-2">
+          <div class="bg-emerald-50 border border-emerald-100 p-3 rounded-2xl">
+            <div class="text-[10px] font-bold text-emerald-600 uppercase">ยอดเติม/ฝากเงินรวม</div>
+            <div id="dashTotalTopup" class="text-base font-bold text-emerald-700 mt-1">0 ฿</div>
           </div>
-          <div class="bg-rose-50 border border-rose-100 p-2.5 rounded-2xl text-center">
-            <div class="text-[10px] font-bold text-rose-600 uppercase">ยอดถอนรวม</div>
-            <div id="dashWithdraw" class="text-xs font-bold text-rose-700 mt-1">0 ฿</div>
+          <div class="bg-rose-50 border border-rose-100 p-3 rounded-2xl">
+            <div class="text-[10px] font-bold text-rose-600 uppercase">ยอดถอนเงินสดรวม</div>
+            <div id="dashTotalWithdraw" class="text-base font-bold text-rose-700 mt-1">0 ฿</div>
           </div>
-          <div class="bg-blue-50 border border-blue-100 p-2.5 rounded-2xl text-center">
-            <div class="text-[10px] font-bold text-blue-600 uppercase">สุทธิ</div>
-            <div id="dashNet" class="text-xs font-bold text-blue-700 mt-1">0 ฿</div>
+          <div class="bg-indigo-50 border border-indigo-100 p-3 rounded-2xl">
+            <div class="text-[10px] font-bold text-indigo-600 uppercase">ยอดโอนเงินระหว่างกัน</div>
+            <div id="dashTotalTransfer" class="text-base font-bold text-indigo-700 mt-1">0 ฿</div>
+          </div>
+          <div class="bg-amber-50 border border-amber-100 p-3 rounded-2xl">
+            <div class="text-[10px] font-bold text-amber-600 uppercase">ยอดรวมชำระสินค้า</div>
+            <div id="dashTotalPayment" class="text-base font-bold text-amber-700 mt-1">0 ฿</div>
           </div>
         </div>
+
+        <!-- STORE BREAKDOWN STATS -->
+        <div class="bg-slate-50 p-3.5 rounded-2xl border border-slate-200 space-y-3">
+          <h4 class="text-xs font-bold text-slate-700 flex items-center justify-between">
+            <span><i class="fa-solid fa-store text-amber-500 mr-1.5"></i>ยอดขายแยกตามรายร้านค้า</span>
+            <span id="storeCount" class="text-[10px] bg-slate-200 text-slate-600 px-2 py-0.5 rounded-full">0 ร้าน</span>
+          </h4>
+          <div id="storeStatsList" class="space-y-2 max-h-[180px] overflow-y-auto pr-1">
+            <!-- Dynamic Store Items -->
+          </div>
+        </div>
+
+      </div>
+
+      <!-- STEP 4: HISTORY TAB -->
+      <div id="historySection" class="hidden space-y-4">
+        
+        <!-- HISTORY FILTER BAR -->
+        <div class="bg-slate-50 p-3 rounded-2xl border border-slate-200 space-y-2">
+          <div class="flex justify-between items-center text-xs font-bold text-slate-700">
+            <span><i class="fa-solid fa-filter text-blue-600 mr-1"></i>ตัวกรองประวัติฝาก/ถอน</span>
+            <button onclick="loadHistoryData()" class="text-blue-600 hover:underline"><i class="fa-solid fa-rotate-right mr-1"></i>รีเฟรช</button>
+          </div>
+          
+          <div class="grid grid-cols-2 gap-2">
+            <select id="histFilterType" onchange="handleFilterTypeChange('hist')" class="bg-white border border-slate-200 rounded-xl px-2 py-1.5 text-xs font-semibold text-slate-700 focus:outline-none">
+              <option value="day">รายวัน (Daily)</option>
+              <option value="month">รายเดือน (Monthly)</option>
+              <option value="year">รายปี (Yearly)</option>
+              <option value="all">ทั้งหมด (All)</option>
+            </select>
+            <input type="date" id="histFilterDate" onchange="renderHistoryView()" class="bg-white border border-slate-200 rounded-xl px-2 py-1.5 text-xs font-semibold text-slate-700 focus:outline-none">
+          </div>
+        </div>
+
+        <!-- EXPORT EXCEL BUTTON -->
+        <button onclick="exportToExcel('history')" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-2 rounded-xl text-xs font-bold flex items-center justify-center gap-2 shadow-sm transition-all">
+          <i class="fa-solid fa-file-excel"></i> ดาวน์โหลดประวัติฝาก/ถอน (.XLS)
+        </button>
 
         <!-- HISTORY LIST HEADER -->
         <div class="flex justify-between items-center pt-1">
@@ -170,20 +207,23 @@
         </div>
 
         <!-- LIST CONTAINER -->
-        <div id="historyList" class="space-y-2 max-h-[280px] overflow-y-auto pr-1">
+        <div id="historyList" class="space-y-2 max-h-[320px] overflow-y-auto pr-1">
           <!-- Item Dynamic JS -->
         </div>
       </div>
 
     </div>
 
-    <!-- BOTTOM NAVBAR -->
-    <div id="bottomNav" class="hidden bg-white border-t border-slate-100 p-2 grid grid-cols-2 gap-1 rounded-t-2xl shadow-lg">
-      <button onclick="switchTab('main')" id="navMain" class="py-2 text-center text-blue-600 font-semibold text-xs flex flex-col items-center gap-1">
+    <!-- 1. BOTTOM NAVBAR (FIXED AT BOTTOM) -->
+    <div id="bottomNav" class="hidden fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-md bg-white border-t border-slate-200 p-2 grid grid-cols-3 gap-1 rounded-t-2xl shadow-2xl z-40">
+      <button onclick="switchTab('main')" id="navMain" class="py-2 text-center text-blue-600 font-semibold text-xs flex flex-col items-center gap-1 transition-all">
         <i class="fa-solid fa-house text-lg"></i> หน้าหลัก
       </button>
-      <button onclick="switchTab('history')" id="navHistory" class="py-2 text-center text-slate-400 font-semibold text-xs flex flex-col items-center gap-1">
-        <i class="fa-solid fa-chart-pie text-lg"></i> ประวัติ & แดชบอร์ด
+      <button onclick="switchTab('dashboard')" id="navDashboard" class="py-2 text-center text-slate-400 font-semibold text-xs flex flex-col items-center gap-1 transition-all">
+        <i class="fa-solid fa-chart-pie text-lg"></i> แดชบอร์ด
+      </button>
+      <button onclick="switchTab('history')" id="navHistory" class="py-2 text-center text-slate-400 font-semibold text-xs flex flex-col items-center gap-1 transition-all">
+        <i class="fa-solid fa-clock-rotate-left text-lg"></i> ประวัติฝาก/ถอน
       </button>
     </div>
 
@@ -201,39 +241,45 @@
     </div>
   </div>
 
-  <!-- DETAIL MODAL POPUP -->
+  <!-- 3. DETAIL MODAL POPUP (WITH VOID BUTTON) -->
   <div id="detailModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-    <div class="bg-white w-full max-w-sm rounded-3xl p-5 space-y-4 shadow-2xl animate-fade-in">
+    <div class="bg-white w-full max-w-sm rounded-3xl p-5 space-y-4 shadow-2xl">
       <div class="flex justify-between items-center border-b pb-3">
         <h3 class="font-bold text-slate-800 text-base"><i class="fa-solid fa-circle-info text-blue-600 mr-2"></i>รายละเอียดรายการ</h3>
         <button onclick="closeDetailModal()" class="w-8 h-8 rounded-full bg-slate-100 text-slate-500 flex items-center justify-center hover:bg-slate-200"><i class="fa-solid fa-xmark"></i></button>
       </div>
+      
       <div id="detailModalBody" class="space-y-3 text-xs text-slate-600">
         <!-- Dynamic Content -->
       </div>
-      <button onclick="closeDetailModal()" class="w-full bg-slate-800 hover:bg-slate-900 text-white py-2.5 rounded-xl font-bold text-xs">
-        ปิดหน้าต่าง
-      </button>
+
+      <div class="flex gap-2 pt-2">
+        <button onclick="cancelAndVoidTransaction()" class="flex-1 bg-rose-100 hover:bg-rose-200 text-rose-700 py-2.5 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 transition-all">
+          <i class="fa-solid fa-trash-can"></i> ยกเลิกทำรายการ
+        </button>
+        <button onclick="closeDetailModal()" class="flex-1 bg-slate-800 hover:bg-slate-900 text-white py-2.5 rounded-xl font-bold text-xs transition-all">
+          ปิดหน้าต่าง
+        </button>
+      </div>
     </div>
   </div>
 
   <!-- JS LOGIC -->
   <script>
-    // ==========================================
-    // CONFIGURATION
-    // ==========================================
-    const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbz4d1l3_HNPVu1YgdEScdNwd2KdbFM_V8fe8cscb7S17BZxVdc035D039kcTCDpt_7TTg/exec";
+    // ** ใส่ Web App URL ของคุณที่นี่ **
+    const GAS_WEB_APP_URL = "https://script.google.com/macros/s/YOUR_EXEC_URL/exec";
 
     let currentAdmin = null;
     let currentTransactionType = 'topup'; 
     let selectedAmount = 0;
     let html5QrcodeScanner = null;
-    let cachedHistoryData = [];
+    let cachedRawHistory = [];
+    let selectedDetailItem = null;
 
-    // AUTO INIT LOCAL STORAGE LOGIN
     window.addEventListener('DOMContentLoaded', () => {
       const today = new Date().toISOString().split('T')[0];
-      document.getElementById('filterDate').value = today;
+      document.getElementById('dashFilterDate').value = today;
+      document.getElementById('histFilterDate').value = today;
 
       const savedAdmin = localStorage.getItem('school_wallet_admin');
       if (savedAdmin) {
@@ -246,7 +292,6 @@
       }
     });
 
-    // Sound Notification API
     const playSound = (type) => {
       const ctx = new (window.AudioContext || window.webkitAudioContext)();
       const osc = ctx.createOscillator();
@@ -269,7 +314,6 @@
       }
     };
 
-    // CALL GAS API
     async function apiCall(data) {
       try {
         const response = await fetch(GAS_WEB_APP_URL, {
@@ -285,7 +329,6 @@
       }
     }
 
-    // HELPER: Format Thai Date Time
     function formatThaiDateTime(timeMs) {
       if (!timeMs) return '-';
       const d = new Date(timeMs);
@@ -298,11 +341,11 @@
       return `${day}/${month}/${year} ${hours}:${mins}`;
     }
 
-    // 1. ADMIN LOGIN & LOCAL STORAGE
+    // LOGIN
     async function loginAdmin() {
       const adminId = document.getElementById('adminIdInput').value.trim();
       if (!adminId) {
-        Swal.fire({ icon: 'warning', title: 'แจ้งเตือน', text: 'กรุณากรอกรหัสผู้ดูแลระบบ', confirmColor: '#3085d6' });
+        Swal.fire({ icon: 'warning', title: 'แจ้งเตือน', text: 'กรุณากรอกรหัสผู้ดูแลระบบ' });
         return;
       }
 
@@ -338,6 +381,7 @@
           document.getElementById('adminBadge').classList.add('hidden');
           document.getElementById('loginSection').classList.remove('hidden');
           document.getElementById('appSection').classList.add('hidden');
+          document.getElementById('dashboardSection').classList.add('hidden');
           document.getElementById('historySection').classList.add('hidden');
           document.getElementById('bottomNav').classList.add('hidden');
           document.getElementById('adminIdInput').value = '';
@@ -353,7 +397,7 @@
       document.getElementById('bottomNav').classList.remove('hidden');
     }
 
-    // MODE SELECTION
+    // MODE & AMOUNT
     function setTransactionType(type) {
       currentTransactionType = type;
       const btnTopup = document.getElementById('btnModeTopup');
@@ -368,7 +412,6 @@
       }
     }
 
-    // AMOUNT SELECTION
     function selectAmount(amt) {
       selectedAmount = amt;
       document.getElementById('customAmountInput').value = amt;
@@ -380,7 +423,7 @@
       input.focus();
     }
 
-    // SEARCH & CONFIRM PROCESS
+    // TRANSACTION PROCESS
     async function searchStudentManual() {
       const id = document.getElementById('manualStudentId').value.trim();
       if (!id) {
@@ -496,25 +539,33 @@
       }
     }
 
-    // NAVIGATION & HISTORY DASHBOARD
+    // SWITCH TAB
     function switchTab(tab) {
+      document.getElementById('appSection').classList.add('hidden');
+      document.getElementById('dashboardSection').classList.add('hidden');
+      document.getElementById('historySection').classList.add('hidden');
+
+      document.getElementById('navMain').className = "py-2 text-center text-slate-400 font-semibold text-xs flex flex-col items-center gap-1 transition-all";
+      document.getElementById('navDashboard').className = "py-2 text-center text-slate-400 font-semibold text-xs flex flex-col items-center gap-1 transition-all";
+      document.getElementById('navHistory').className = "py-2 text-center text-slate-400 font-semibold text-xs flex flex-col items-center gap-1 transition-all";
+
       if (tab === 'main') {
         document.getElementById('appSection').classList.remove('hidden');
-        document.getElementById('historySection').classList.add('hidden');
-        document.getElementById('navMain').className = "py-2 text-center text-blue-600 font-semibold text-xs flex flex-col items-center gap-1";
-        document.getElementById('navHistory').className = "py-2 text-center text-slate-400 font-semibold text-xs flex flex-col items-center gap-1";
-      } else {
-        document.getElementById('appSection').classList.add('hidden');
+        document.getElementById('navMain').className = "py-2 text-center text-blue-600 font-semibold text-xs flex flex-col items-center gap-1 transition-all";
+      } else if (tab === 'dashboard') {
+        document.getElementById('dashboardSection').classList.remove('hidden');
+        document.getElementById('navDashboard').className = "py-2 text-center text-blue-600 font-semibold text-xs flex flex-col items-center gap-1 transition-all";
+        loadHistoryData();
+      } else if (tab === 'history') {
         document.getElementById('historySection').classList.remove('hidden');
-        document.getElementById('navHistory').className = "py-2 text-center text-blue-600 font-semibold text-xs flex flex-col items-center gap-1";
-        document.getElementById('navMain').className = "py-2 text-center text-slate-400 font-semibold text-xs flex flex-col items-center gap-1";
-        loadHistory();
+        document.getElementById('navHistory').className = "py-2 text-center text-blue-600 font-semibold text-xs flex flex-col items-center gap-1 transition-all";
+        loadHistoryData();
       }
     }
 
-    function handleFilterTypeChange() {
-      const type = document.getElementById('filterType').value;
-      const dateInput = document.getElementById('filterDate');
+    function handleFilterTypeChange(prefix) {
+      const type = document.getElementById(`${prefix}FilterType`).value;
+      const dateInput = document.getElementById(`${prefix}FilterDate`);
       
       if (type === 'all') {
         dateInput.disabled = true;
@@ -523,7 +574,6 @@
         if (type === 'year') {
           dateInput.type = 'number';
           dateInput.value = new Date().getFullYear();
-          dateInput.placeholder = 'YYYY';
         } else if (type === 'month') {
           dateInput.type = 'month';
           const now = new Date();
@@ -533,79 +583,99 @@
           dateInput.value = new Date().toISOString().split('T')[0];
         }
       }
-      renderFilteredHistory();
+      loadHistoryData();
     }
 
-    async function loadHistory() {
-      const container = document.getElementById('historyList');
-      container.innerHTML = '<p class="text-center text-slate-400 text-xs py-5"><i class="fa-solid fa-spinner fa-spin mr-1"></i>กำลังโหลดประวัติ...</p>';
+    async function loadHistoryData() {
+      const isDashboard = !document.getElementById('dashboardSection').classList.contains('hidden');
+      const prefix = isDashboard ? 'dash' : 'hist';
+      const filterType = document.getElementById(`${prefix}FilterType`).value;
+      const filterValue = document.getElementById(`${prefix}FilterDate`).value;
 
-      const res = await apiCall({ action: 'getHistory' });
+      Swal.showLoading();
+      const res = await apiCall({ 
+        action: 'getHistory',
+        filterType: filterType,
+        filterValue: filterValue
+      });
+      Swal.close();
+
       if (res.status === 'success') {
-        cachedHistoryData = res.history || [];
-        renderFilteredHistory();
-      } else {
-        container.innerHTML = '<p class="text-center text-slate-400 text-xs py-5">เกิดข้อผิดพลาดในการโหลดข้อมูล</p>';
+        cachedRawHistory = res.history || [];
+        renderDashboardView();
+        renderHistoryView();
       }
     }
 
-    function renderFilteredHistory() {
-      const filterType = document.getElementById('filterType').value;
-      const filterValue = document.getElementById('filterDate').value;
+    // 2. RENDER DASHBOARD
+    function renderDashboardView() {
+      let totalTopup = 0;
+      let totalWithdraw = 0;
+      let totalTransfer = 0;
+      let totalPayment = 0;
+      let storeMap = {};
+
+      cachedRawHistory.forEach(item => {
+        const type = (item.type || '').toLowerCase();
+        const detail = (item.detail || '').toLowerCase();
+        const amt = Number(item.amount) || 0;
+
+        if (type.includes('เข้า') || detail.includes('ฝาก') || detail.includes('เติม')) {
+          totalTopup += amt;
+        } else if (type.includes('ออก') || detail.includes('ถอน')) {
+          totalWithdraw += amt;
+        } else if (detail.includes('โอน')) {
+          totalTransfer += amt;
+        } else if (detail.includes('ชำระ') || detail.includes('ซื้อ') || detail.includes('ร้าน')) {
+          totalPayment += amt;
+
+          let storeName = "ร้านค้าทั่วไป";
+          if (item.detail.includes("ร้าน")) {
+            storeName = item.detail.split("ร้าน")[1].split(" ")[0].trim();
+            storeName = "ร้าน " + storeName;
+          }
+          storeMap[storeName] = (storeMap[storeName] || 0) + amt;
+        }
+      });
+
+      document.getElementById('dashTotalTopup').innerText = `${totalTopup.toLocaleString()} ฿`;
+      document.getElementById('dashTotalWithdraw').innerText = `${totalWithdraw.toLocaleString()} ฿`;
+      document.getElementById('dashTotalTransfer').innerText = `${totalTransfer.toLocaleString()} ฿`;
+      document.getElementById('dashTotalPayment').innerText = `${totalPayment.toLocaleString()} ฿`;
+
+      const storeList = document.getElementById('storeStatsList');
+      const stores = Object.keys(storeMap);
+      document.getElementById('storeCount').innerText = `${stores.length} ร้าน`;
+
+      if (stores.length > 0) {
+        storeList.innerHTML = stores.map(store => `
+          <div class="flex justify-between items-center bg-white p-2.5 rounded-xl border border-slate-100 text-xs">
+            <span class="font-semibold text-slate-700"><i class="fa-solid fa-shop text-amber-500 mr-2"></i>${store}</span>
+            <span class="font-bold text-slate-800">${storeMap[store].toLocaleString()} ฿</span>
+          </div>
+        `).join('');
+      } else {
+        storeList.innerHTML = `<p class="text-center text-slate-400 text-xs py-4">ไม่มีรายการชำระค่าสินค้าช่วงนี้</p>`;
+      }
+    }
+
+    // RENDER HISTORY VIEW
+    function renderHistoryView() {
       const container = document.getElementById('historyList');
 
-      // กรองเฉพาะรายการที่เป็นการฝาก/ถอน
-      let filtered = cachedHistoryData.filter(item => {
+      const filtered = cachedRawHistory.filter(item => {
         const detail = item.detail || '';
         const type = item.type || '';
         return detail.includes('ฝาก') || detail.includes('ถอน') || type.includes('เข้า') || type.includes('ออก');
       });
 
-      // กรองตามวันที่ / เดือน / ปี (อ้างอิงจาก timestamp)
-      if (filterType !== 'all' && filterValue) {
-        filtered = filtered.filter(item => {
-          if (!item.timestamp) return false;
-          const txDate = new Date(item.timestamp);
-          const yyyy = txDate.getFullYear().toString();
-          const mm = String(txDate.getMonth() + 1).padStart(2, '0');
-          const dd = String(txDate.getDate()).padStart(2, '0');
-
-          if (filterType === 'day') {
-            return `${yyyy}-${mm}-${dd}` === filterValue;
-          } else if (filterType === 'month') {
-            return `${yyyy}-${mm}` === filterValue;
-          } else if (filterType === 'year') {
-            return yyyy === filterValue.toString();
-          }
-          return true;
-        });
-      }
-
-      // คำนวณยอดรวมแดชบอร์ด
-      let totalDeposit = 0;
-      let totalWithdraw = 0;
-
-      filtered.forEach(item => {
-        const detail = item.detail || '';
-        const type = item.type || '';
-        if (detail.includes('ฝาก') || type.includes('เข้า') || type.includes('เติม')) {
-          totalDeposit += Number(item.amount) || 0;
-        } else if (detail.includes('ถอน') || type.includes('ออก') || type.includes('ถอน')) {
-          totalWithdraw += Number(item.amount) || 0;
-        }
-      });
-
-      document.getElementById('dashDeposit').innerText = `${totalDeposit.toLocaleString()} ฿`;
-      document.getElementById('dashWithdraw').innerText = `${totalWithdraw.toLocaleString()} ฿`;
-      document.getElementById('dashNet').innerText = `${(totalDeposit - totalWithdraw).toLocaleString()} ฿`;
       document.getElementById('historyCount').innerText = `${filtered.length} รายการ`;
 
-      // แสดงผลรายการย่อ (Compact List)
       if (filtered.length > 0) {
         container.innerHTML = filtered.map((item, index) => {
           const detail = item.detail || '';
           const type = item.type || '';
-          const isDeposit = detail.includes('ฝาก') || type.includes('เข้า') || type.includes('เติม');
+          const isDeposit = type.includes('เข้า') || detail.includes('ฝาก');
           const badgeClass = isDeposit ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700';
           const icon = isDeposit ? 'fa-arrow-down-left' : 'fa-arrow-up-right';
           const sign = isDeposit ? '+' : '-';
@@ -626,27 +696,27 @@
                 <div class="font-bold text-xs ${isDeposit ? 'text-emerald-600' : 'text-rose-600'}">
                   ${sign}${Number(item.amount).toLocaleString()} ฿
                 </div>
-                <div class="text-[9px] text-slate-400">แตะเพื่อดูเพิ่ม <i class="fa-solid fa-chevron-right text-[8px]"></i></div>
+                <div class="text-[9px] text-slate-400">แตะดูเพิ่ม <i class="fa-solid fa-chevron-right text-[8px]"></i></div>
               </div>
             </div>
           `;
         }).join('');
 
-        window.currentFilteredList = filtered;
+        window.currentHistoryDisplay = filtered;
       } else {
-        container.innerHTML = '<p class="text-center text-slate-400 text-xs py-8">ไม่พบประวัติรายการตามเงื่อนไขที่เลือก</p>';
+        container.innerHTML = '<p class="text-center text-slate-400 text-xs py-8">ไม่พบประวัติรายการฝาก/ถอนเงิน</p>';
       }
     }
 
-    // DETAIL MODAL POPUP LOGIC
+    // DETAIL MODAL & VOID
     function openDetailModal(index) {
-      const item = window.currentFilteredList[index];
+      const item = window.currentHistoryDisplay[index];
       if (!item) return;
 
+      selectedDetailItem = item;
       const detail = item.detail || '';
       const type = item.type || '';
-      const isDeposit = detail.includes('ฝาก') || type.includes('เข้า') || type.includes('เติม');
-      const typeText = isDeposit ? 'ฝากเงินสด / เติมเงิน' : 'ถอนเงินสด';
+      const isDeposit = type.includes('เข้า') || detail.includes('ฝาก');
       const statusColor = isDeposit ? 'text-emerald-600' : 'text-rose-600';
       const dateStr = formatThaiDateTime(item.timestamp);
 
@@ -654,7 +724,7 @@
       body.innerHTML = `
         <div class="bg-slate-50 p-3 rounded-2xl border border-slate-100 space-y-2">
           <div class="flex justify-between items-center">
-            <span class="text-slate-400">รหัสทำรายการ (TX ID):</span>
+            <span class="text-slate-400">TX ID:</span>
             <span class="font-mono font-bold text-slate-700">${item.id || '-'}</span>
           </div>
           <div class="flex justify-between items-center">
@@ -662,20 +732,20 @@
             <span class="font-bold text-slate-800 text-sm">${item.studentId}</span>
           </div>
           <div class="flex justify-between items-center">
-            <span class="text-slate-400">ประเภทรายการ:</span>
-            <span class="font-bold ${statusColor}">${typeText}</span>
+            <span class="text-slate-400">ประเภท:</span>
+            <span class="font-bold ${statusColor}">${item.type || '-'}</span>
           </div>
           <div class="flex justify-between items-center">
             <span class="text-slate-400">จำนวนเงิน:</span>
             <span class="font-bold text-base ${statusColor}">${Number(item.amount).toLocaleString()} บาท</span>
           </div>
           <div class="flex justify-between items-center">
-            <span class="text-slate-400">วัน-เวลาที่ทำรายการ:</span>
+            <span class="text-slate-400">วัน-เวลา:</span>
             <span class="font-semibold text-slate-700">${dateStr}</span>
           </div>
           <hr class="border-slate-200">
           <div>
-            <span class="text-slate-400 block mb-1">รายละเอียดเพิ่มเติม:</span>
+            <span class="text-slate-400 block mb-1">รายละเอียด:</span>
             <p class="bg-white p-2 rounded-xl border border-slate-200 font-medium text-slate-700">${item.detail || '-'}</p>
           </div>
         </div>
@@ -686,6 +756,124 @@
 
     function closeDetailModal() {
       document.getElementById('detailModal').classList.add('hidden');
+      selectedDetailItem = null;
+    }
+
+    // 3. CANCEL & VOID
+    async function cancelAndVoidTransaction() {
+      if (!selectedDetailItem) return;
+
+      const confirm = await Swal.fire({
+        title: 'ยืนยันยกเลิกรายการนี้?',
+        text: `ระบบจะลบรายการนี้ออกจากชีท และปรับปรุงยอดเงินคืนนักเรียนอัตโนมัติ (รหัส ${selectedDetailItem.studentId})`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'ยืนยันลบรายการ',
+        cancelButtonText: 'ยกเลิก',
+        confirmButtonColor: '#f43f5e'
+      });
+
+      if (confirm.isConfirmed) {
+        Swal.showLoading();
+        const res = await apiCall({
+          action: 'voidTransaction',
+          txId: selectedDetailItem.id,
+          sheetName: selectedDetailItem.sheetName
+        });
+        Swal.close();
+
+        if (res.status === 'success') {
+          playSound('success');
+          closeDetailModal();
+          Swal.fire({ icon: 'success', title: 'ยกเลิกรายการเรียบร้อย', timer: 1500, showConfirmButton: false });
+          loadHistoryData();
+        } else {
+          playSound('error');
+          Swal.fire({ icon: 'error', title: 'เกิดข้อผิดพลาด', text: res.message });
+        }
+      }
+    }
+
+    // 4. EXPORT EXCEL (.XLS)
+    function exportToExcel(type) {
+      let excelContent = "";
+      let filename = "";
+
+      if (type === 'history') {
+        filename = `SchoolWallet_History_${new Date().toISOString().split('T')[0]}.xls`;
+        excelContent = `
+          <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
+          <head><meta charset="utf-8"></head>
+          <body>
+            <h3>รายงานประวัติฝาก/ถอนเงินสด - School Wallet</h3>
+            <table border="1">
+              <thead>
+                <tr style="background-color: #f2f2f2;">
+                  <th>ID</th>
+                  <th>รหัสนักเรียน</th>
+                  <th>ประเภท</th>
+                  <th>รายละเอียด</th>
+                  <th>ยอดเงิน (บาท)</th>
+                  <th>วันเวลา</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${(window.currentHistoryDisplay || []).map(item => `
+                  <tr>
+                    <td>${item.id}</td>
+                    <td>${item.studentId}</td>
+                    <td>${item.type}</td>
+                    <td>${item.detail}</td>
+                    <td>${item.amount}</td>
+                    <td>${formatThaiDateTime(item.timestamp)}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </body>
+          </html>
+        `;
+      } else if (type === 'dashboard') {
+        filename = `SchoolWallet_Dashboard_${new Date().toISOString().split('T')[0]}.xls`;
+        excelContent = `
+          <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
+          <head><meta charset="utf-8"></head>
+          <body>
+            <h3>รายงานสรุปยอดแดชบอร์ด - School Wallet</h3>
+            <p><strong>ยอดฝาก/เติมรวม:</strong> ${document.getElementById('dashTotalTopup').innerText}</p>
+            <p><strong>ยอดถอนรวม:</strong> ${document.getElementById('dashTotalWithdraw').innerText}</p>
+            <p><strong>ยอดโอนระหว่างกัน:</strong> ${document.getElementById('dashTotalTransfer').innerText}</p>
+            <p><strong>ยอดชำระสินค้าทั้งหมด:</strong> ${document.getElementById('dashTotalPayment').innerText}</p>
+            <br>
+            <h4>ยอดขายแยกตามร้านค้า</h4>
+            <table border="1">
+              <thead>
+                <tr style="background-color: #f2f2f2;">
+                  <th>ชื่อร้านค้า</th>
+                  <th>ยอดขายรวม (บาท)</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${Array.from(document.querySelectorAll('#storeStatsList > div')).map(div => {
+                  const name = div.querySelector('span:first-child').innerText;
+                  const amt = div.querySelector('span:last-child').innerText;
+                  return `<tr><td>${name}</td><td>${amt}</td></tr>`;
+                }).join('')}
+              </tbody>
+            </table>
+          </body>
+          </html>
+        `;
+      }
+
+      const blob = new Blob([excelContent], { type: 'application/vnd.ms-excel' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
     }
   </script>
 </body>
