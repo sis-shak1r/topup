@@ -8,7 +8,7 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
@@ -22,20 +22,40 @@
   <div class="w-full max-w-md bg-white min-h-[88vh] rounded-3xl shadow-2xl flex flex-col justify-between overflow-hidden relative border border-slate-100 mb-12">
     
     <!-- HEADER -->
-    <div class="bg-gradient-to-r from-blue-700 to-indigo-800 text-white p-5 rounded-b-3xl shadow-lg shrink-0">
-      <div class="flex justify-between items-center mb-1">
-        <div class="flex items-center space-x-2">
-          <i class="fa-solid fa-wallet text-2xl text-amber-300"></i>
-          <span class="font-bold text-lg tracking-wide">School Wallet</span>
+    <div class="bg-gradient-to-br from-slate-900 via-indigo-950 to-blue-900 text-white p-5 rounded-b-[2rem] shadow-xl relative shrink-0 overflow-hidden border-b border-white/10">
+      <!-- Background Decorative Effect -->
+      <div class="absolute -top-10 -right-10 w-32 h-32 bg-blue-500/10 rounded-full blur-2xl pointer-events-none"></div>
+
+      <!-- Top Row: Logo & Logout Button -->
+      <div class="flex justify-between items-center mb-3">
+        <div class="flex items-center space-x-2.5">
+          <div class="w-9 h-9 rounded-2xl bg-amber-400/20 border border-amber-400/30 flex items-center justify-center shadow-inner">
+            <i class="fa-solid fa-wallet text-amber-300 text-base"></i>
+          </div>
+          <div>
+            <span class="font-extrabold text-base tracking-wide bg-gradient-to-r from-white via-slate-100 to-slate-300 bg-clip-text text-transparent block leading-tight">School Wallet</span>
+            <span class="text-[10px] text-slate-400 font-medium">ระบบบริหารการเงินโรงเรียน</span>
+          </div>
         </div>
-        <div id="adminBadge" class="hidden text-xs bg-white/20 backdrop-blur-md px-3 py-1 rounded-full flex items-center gap-2 border border-white/30">
-          <span id="adminName"><i class="fa-solid fa-user-shield text-emerald-300 mr-1"></i>Admin</span>
-          <button onclick="logoutAdmin()" class="text-rose-300 hover:text-rose-100 ml-1" title="ออกจากระบบ">
-            <i class="fa-solid fa-right-from-bracket"></i>
-          </button>
-        </div>
+
+        <!-- Separate Logout Button -->
+        <button id="btnLogout" onclick="logoutAdmin()" class="hidden w-8 h-8 rounded-full bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/30 text-rose-300 hover:text-rose-100 flex items-center justify-center transition-all active:scale-90" title="ออกจากระบบ">
+          <i class="fa-solid fa-power-off text-xs"></i>
+        </button>
       </div>
-      <p class="text-[11px] text-blue-100">ระบบบริการดิจิทัล และสรุปรายงานการเงินโรงเรียน</p>
+
+      <!-- Admin Status Bar -->
+      <div id="adminBadge" class="hidden mt-2 pt-2.5 border-t border-white/10 flex items-center justify-between">
+        <div class="flex items-center space-x-2">
+          <div class="relative flex h-2 w-2">
+            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+            <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+          </div>
+          <span class="text-[11px] text-slate-300 font-medium">เข้าสู่ระบบโดย:</span>
+          <span id="adminName" class="text-xs font-bold text-emerald-300 truncate max-w-[150px]">Admin</span>
+        </div>
+        <span class="text-[9px] bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 px-2 py-0.5 rounded-full font-semibold">เจ้าหน้าที่</span>
+      </div>
     </div>
 
     <!-- MAIN CONTAINER -->
@@ -378,7 +398,10 @@
         if (result.isConfirmed) {
           localStorage.removeItem('school_wallet_admin');
           currentAdmin = null;
+          
           document.getElementById('adminBadge').classList.add('hidden');
+          document.getElementById('btnLogout').classList.add('hidden');
+          
           document.getElementById('loginSection').classList.remove('hidden');
           document.getElementById('appSection').classList.add('hidden');
           document.getElementById('dashboardSection').classList.add('hidden');
@@ -390,8 +413,10 @@
     }
 
     function showAppMainView() {
-      document.getElementById('adminName').innerHTML = `<i class="fa-solid fa-user-shield text-emerald-300 mr-1"></i>${currentAdmin.name}`;
+      document.getElementById('adminName').innerText = currentAdmin.name;
       document.getElementById('adminBadge').classList.remove('hidden');
+      document.getElementById('btnLogout').classList.remove('hidden');
+      
       document.getElementById('loginSection').classList.add('hidden');
       document.getElementById('appSection').classList.remove('hidden');
       document.getElementById('bottomNav').classList.remove('hidden');
