@@ -514,10 +514,25 @@
       }
     }
 
-    // OPTIMIZED HIGH-RES QR SCANNER
-    function openQrScanner() {
+    // OPTIMIZED & ERROR-FREE QR SCANNER
+    async function openQrScanner() {
       document.getElementById('qrModal').classList.remove('hidden');
-      
+
+      // 1. เคลียร์การทำงานเก่าป้องกัน State Conflict
+      if (html5QrcodeScanner) {
+        try {
+          if (html5QrcodeScanner.isScanning) {
+            await html5QrcodeScanner.stop();
+          }
+          html5QrcodeScanner.clear();
+        } catch (e) {
+          console.warn("Cleanup previous scanner instance:", e);
+        }
+      }
+
+      // 2. สร้าง Instance ใหม่
+      html5QrcodeScanner = new Html5Qrcode("reader");
+
       const config = {
         fps: 15,
         qrbox: function(viewfinderWidth, viewfinderHeight) {
@@ -533,66 +548,78 @@
         }
       };
 
+      // 3. ใช้ Constraints แบบยืดหยุ่น เพื่อป้องกัน Camera Rejection บน PC/มือถือ
       const cameraConstraints = {
         facingMode: "environment",
-        width: { min: 1280, ideal: 1920, max: 2560 },
-        height: { min: 720, ideal: 1080, max: 1440 }
+        width: { ideal: 1280 },
+        height: { ideal: 720 }
       };
 
-      html5QrcodeScanner = new Html5Qrcode("reader");
+      try {
+        await html5QrcodeScanner.start(
+          cameraConstraints,
+          config,
+          (decodedText) => {
+            closeQrScanner();
+            processStudentTransaction(decodedText);
+          },
+          (errorMessage) => { /* ignore frame scan errors */ }
+        );
 
-      html5QrcodeScanner.start(
-        cameraConstraints,
-        config,
-        (decodedText) => {
-          closeQrScanner();
-          processStudentTransaction(decodedText);
-        },
-        (errorMessage) => { }
-      ).then(() => {
-        // Advanced Zoom Control (ถ้าอุปกรณ์และเบราว์เซอร์รองรับ)
+        // Advanced Zoom Control (ถ้าอุปกรณ์รองรับ)
         try {
           const videoTrack = html5QrcodeScanner.getRunningTrack();
           if (videoTrack && typeof videoTrack.getCapabilities === 'function') {
             const capabilities = videoTrack.getCapabilities();
             if (capabilities.zoom) {
               const targetZoom = Math.min(capabilities.zoom.max, Math.max(capabilities.zoom.min, 1.5));
-              videoTrack.applyConstraints({
+              await videoTrack.applyConstraints({
                 advanced: [{ zoom: targetZoom }]
-              }).catch(e => console.log("Zoom not applied", e));
+              });
             }
           }
-        } catch(e) {
-          console.log("Zoom feature check failed", e);
+        } catch(zoomErr) {
+          console.log("Zoom not supported or applied:", zoomErr);
         }
-      }).catch(err => {
-        // Fallback กรณีอุปกรณ์ไม่รองรับ HD Resolution Constraints
-        html5QrcodeScanner.start(
-          { facingMode: "environment" },
-          { fps: 15, qrbox: { width: 230, height: 230 } },
-          (decodedText) => {
-            closeQrScanner();
-            processStudentTransaction(decodedText);
-          },
-          (errorMessage) => { }
-        ).catch(errFallback => {
-          alert("ไม่สามารถเปิดกล้องได้: " + errFallback);
+
+      } catch (err) {
+        console.warn("High-res camera start failed, trying fallback...", err);
+        
+        // Fallback Strategy ถ้าเบราว์เซอร์ไม่เล่นด้วยกับ Constraints
+        try {
+          await html5QrcodeScanner.start(
+            { facingMode: "environment" },
+            { fps: 10, qrbox: { width: 220, height: 220 } },
+            (decodedText) => {
+              closeQrScanner();
+              processStudentTransaction(decodedText);
+            },
+            (errorMessage) => { }
+          );
+        } catch (errFallback) {
+          console.error("Camera access failed completely:", errFallback);
+          Swal.fire({
+            icon: 'error',
+            title: 'ไม่สามารถเปิดกล้องได้',
+            text: 'กรุณาตรวจสอบการอนุญาตใช้งานกล้องบนเบราว์เซอร์'
+          });
           closeQrScanner();
-        });
-      });
+        }
+      }
     }
 
-    function closeQrScanner() {
+    async function closeQrScanner() {
       if (html5QrcodeScanner) {
-        html5QrcodeScanner.stop().then(() => {
+        try {
+          if (html5QrcodeScanner.isScanning) {
+            await html5QrcodeScanner.stop();
+          }
           html5QrcodeScanner.clear();
-          document.getElementById('qrModal').classList.add('hidden');
-        }).catch(() => {
-          document.getElementById('qrModal').classList.add('hidden');
-        });
-      } else {
-        document.getElementById('qrModal').classList.add('hidden');
+        } catch (err) {
+          console.warn("Error stopping QR Scanner:", err);
+        }
       }
+      document.getElementById('qrModal').classList.add('hidden');
     }
 
     // SWITCH TAB
