@@ -4,23 +4,29 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ระบบเติม-ถอนเงินนักเรียน & แดชบอร์ด</title>
-  
+ 
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-  <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+  <!-- เปลี่ยนเป็น ZXing Browser เพื่อการสแกน QR Code เล็กๆ ที่แม่นยำขึ้น -->
+  <script src="https://unpkg.com/@zxing/library@latest"></script>
 
   <style>
     * { font-family: 'Sarabun', sans-serif; }
+    #interactive video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
   </style>
 </head>
 <body class="bg-slate-100 min-h-screen flex justify-center items-center p-2 md:p-4 pb-20">
 
   <div class="w-full max-w-md bg-white min-h-[88vh] rounded-3xl shadow-2xl flex flex-col justify-between overflow-hidden relative border border-slate-100 mb-12">
-    
+   
     <!-- HEADER -->
     <div class="bg-gradient-to-br from-slate-900 via-indigo-950 to-blue-900 text-white p-5 rounded-b-[2rem] shadow-xl relative shrink-0 overflow-hidden border-b border-white/10">
       <div class="absolute -top-10 -right-10 w-32 h-32 bg-blue-500/10 rounded-full blur-2xl pointer-events-none"></div>
@@ -100,7 +106,7 @@
             <button onclick="selectAmount(100)" class="amt-btn bg-white border border-slate-200 hover:border-blue-500 font-bold py-2.5 rounded-xl text-slate-700 hover:text-blue-600 shadow-sm active:scale-95 transition-all">100</button>
             <button onclick="enableCustomAmount()" class="amt-btn bg-amber-50 border border-amber-200 text-amber-700 font-bold py-2.5 rounded-xl shadow-sm active:scale-95 transition-all">ระบุเอง</button>
           </div>
-          
+         
           <div class="relative">
             <input type="number" id="customAmountInput" placeholder="ระบุจำนวนเงินสด" class="w-full pl-4 pr-10 py-3 bg-white border border-slate-300 rounded-xl font-bold text-slate-800 text-center text-lg focus:ring-2 focus:ring-blue-500 focus:outline-none">
             <span class="absolute right-4 top-3.5 text-slate-400 font-bold">฿</span>
@@ -130,13 +136,12 @@
 
       <!-- STEP 3: DASHBOARD TAB -->
       <div id="dashboardSection" class="hidden space-y-4">
-        
         <div class="bg-slate-50 p-3 rounded-2xl border border-slate-200 space-y-2">
           <div class="flex justify-between items-center text-xs font-bold text-slate-700">
             <span><i class="fa-solid fa-filter text-blue-600 mr-1"></i>ตัวกรองรายงานแดชบอร์ด</span>
             <button onclick="loadHistoryData()" class="text-blue-600 hover:underline"><i class="fa-solid fa-rotate-right mr-1"></i>รีเฟรช</button>
           </div>
-          
+         
           <div class="grid grid-cols-2 gap-2">
             <select id="dashFilterType" onchange="handleFilterTypeChange('dash')" class="bg-white border border-slate-200 rounded-xl px-2 py-1.5 text-xs font-semibold text-slate-700 focus:outline-none">
               <option value="day">รายวัน (Daily)</option>
@@ -176,21 +181,18 @@
             <span><i class="fa-solid fa-store text-amber-500 mr-1.5"></i>ยอดขายแยกตามรายร้านค้า</span>
             <span id="storeCount" class="text-[10px] bg-slate-200 text-slate-600 px-2 py-0.5 rounded-full">0 ร้าน</span>
           </h4>
-          <div id="storeStatsList" class="space-y-2 max-h-[180px] overflow-y-auto pr-1">
-          </div>
+          <div id="storeStatsList" class="space-y-2 max-h-[180px] overflow-y-auto pr-1"></div>
         </div>
-
       </div>
 
       <!-- STEP 4: HISTORY TAB -->
       <div id="historySection" class="hidden space-y-4">
-        
         <div class="bg-slate-50 p-3 rounded-2xl border border-slate-200 space-y-2">
           <div class="flex justify-between items-center text-xs font-bold text-slate-700">
             <span><i class="fa-solid fa-filter text-blue-600 mr-1"></i>ตัวกรองประวัติฝาก/ถอน</span>
             <button onclick="loadHistoryData()" class="text-blue-600 hover:underline"><i class="fa-solid fa-rotate-right mr-1"></i>รีเฟรช</button>
           </div>
-          
+         
           <div class="grid grid-cols-2 gap-2">
             <select id="histFilterType" onchange="handleFilterTypeChange('hist')" class="bg-white border border-slate-200 rounded-xl px-2 py-1.5 text-xs font-semibold text-slate-700 focus:outline-none">
               <option value="day">รายวัน (Daily)</option>
@@ -211,8 +213,7 @@
           <span id="historyCount" class="text-[10px] bg-slate-200 text-slate-600 px-2 py-0.5 rounded-full font-bold">0 รายการ</span>
         </div>
 
-        <div id="historyList" class="space-y-2 max-h-[320px] overflow-y-auto pr-1">
-        </div>
+        <div id="historyList" class="space-y-2 max-h-[320px] overflow-y-auto pr-1"></div>
       </div>
 
     </div>
@@ -239,8 +240,12 @@
         <h3 class="font-bold text-slate-800">สแกน QR Code นักเรียน</h3>
         <button onclick="closeQrScanner()" class="w-8 h-8 rounded-full bg-slate-100 text-slate-500 flex items-center justify-center"><i class="fa-solid fa-xmark"></i></button>
       </div>
-      <div id="reader" class="overflow-hidden rounded-2xl bg-black min-h-[280px]"></div>
-      <p class="text-xs text-slate-400">วาง QR Code ให้ตรงกับช่องสแกนเพื่ออ่านข้อมูล</p>
+      <div id="reader" class="overflow-hidden rounded-2xl bg-black min-h-[260px] relative flex items-center justify-center">
+        <video id="videoScanner" class="w-full h-full object-cover"></video>
+        <!-- Custom overlay box -->
+        <div class="absolute inset-0 border-2 border-dashed border-emerald-400/80 rounded-2xl pointer-events-none m-6"></div>
+      </div>
+      <p class="text-xs text-slate-400">ถือบัตรในระยะปกติ ระบบจะขยายภาพและสแกนอัตโนมัติ</p>
     </div>
   </div>
 
@@ -251,9 +256,8 @@
         <h3 class="font-bold text-slate-800 text-base"><i class="fa-solid fa-circle-info text-blue-600 mr-2"></i>รายละเอียดรายการ</h3>
         <button onclick="closeDetailModal()" class="w-8 h-8 rounded-full bg-slate-100 text-slate-500 flex items-center justify-center hover:bg-slate-200"><i class="fa-solid fa-xmark"></i></button>
       </div>
-      
-      <div id="detailModalBody" class="space-y-3 text-xs text-slate-600">
-      </div>
+     
+      <div id="detailModalBody" class="space-y-3 text-xs text-slate-600"></div>
 
       <div class="flex gap-2 pt-2">
         <button onclick="cancelAndVoidTransaction()" class="flex-1 bg-rose-100 hover:bg-rose-200 text-rose-700 py-2.5 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 transition-all">
@@ -271,9 +275,10 @@
     const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbz4d1l3_HNPVu1YgdEScdNwd2KdbFM_V8fe8cscb7S17BZxVdc035D039kcTCDpt_7TTg/exec";
 
     let currentAdmin = null;
-    let currentTransactionType = 'topup'; 
+    let currentTransactionType = 'topup';
     let selectedAmount = 0;
-    let html5QrcodeScanner = null;
+    let codeReader = null;
+    let currentStream = null;
     let cachedRawHistory = [];
     let selectedDetailItem = null;
 
@@ -358,7 +363,7 @@
         currentAdmin = res.profile;
         localStorage.setItem('school_wallet_admin', JSON.stringify(currentAdmin));
         showAppMainView();
-        
+       
         playSound('success');
         Swal.fire({ icon: 'success', title: 'เข้าสู่ระบบสำเร็จ', text: `ยินดีต้อนรับ คุณ${currentAdmin.name}`, timer: 1500, showConfirmButton: false });
       } else {
@@ -379,10 +384,10 @@
         if (result.isConfirmed) {
           localStorage.removeItem('school_wallet_admin');
           currentAdmin = null;
-          
+         
           document.getElementById('adminBadge').classList.add('hidden');
           document.getElementById('btnLogout').classList.add('hidden');
-          
+         
           document.getElementById('loginSection').classList.remove('hidden');
           document.getElementById('appSection').classList.add('hidden');
           document.getElementById('dashboardSection').classList.add('hidden');
@@ -397,7 +402,7 @@
       document.getElementById('adminName').innerText = currentAdmin.name;
       document.getElementById('adminBadge').classList.remove('hidden');
       document.getElementById('btnLogout').classList.remove('hidden');
-      
+     
       document.getElementById('loginSection').classList.add('hidden');
       document.getElementById('appSection').classList.remove('hidden');
       document.getElementById('bottomNav').classList.remove('hidden');
@@ -514,110 +519,59 @@
       }
     }
 
-    // OPTIMIZED & ERROR-FREE QR SCANNER
+    // QR SCANNER (ปรับปรุงใหม่ด้วย ZXing + Hardware Zoom/Resolution Optimization)
     async function openQrScanner() {
       document.getElementById('qrModal').classList.remove('hidden');
-
-      // 1. เคลียร์การทำงานเก่าป้องกัน State Conflict
-      if (html5QrcodeScanner) {
-        try {
-          if (html5QrcodeScanner.isScanning) {
-            await html5QrcodeScanner.stop();
-          }
-          html5QrcodeScanner.clear();
-        } catch (e) {
-          console.warn("Cleanup previous scanner instance:", e);
-        }
-      }
-
-      // 2. สร้าง Instance ใหม่
-      html5QrcodeScanner = new Html5Qrcode("reader");
-
-      const config = {
-        fps: 15,
-        qrbox: function(viewfinderWidth, viewfinderHeight) {
-          const minEdge = Math.min(viewfinderWidth, viewfinderHeight);
-          return {
-            width: Math.floor(minEdge * 0.75),
-            height: Math.floor(minEdge * 0.75)
-          };
-        },
-        aspectRatio: 1.0,
-        experimentalFeatures: {
-          useBarCodeDetectorIfSupported: true
-        }
-      };
-
-      // 3. ใช้ Constraints แบบยืดหยุ่น เพื่อป้องกัน Camera Rejection บน PC/มือถือ
-      const cameraConstraints = {
-        facingMode: "environment",
-        width: { ideal: 1280 },
-        height: { ideal: 720 }
-      };
+      codeReader = new ZXing.BrowserQRCodeReader();
 
       try {
-        await html5QrcodeScanner.start(
-          cameraConstraints,
-          config,
-          (decodedText) => {
-            closeQrScanner();
-            processStudentTransaction(decodedText);
-          },
-          (errorMessage) => { /* ignore frame scan errors */ }
-        );
-
-        // Advanced Zoom Control (ถ้าอุปกรณ์รองรับ)
-        try {
-          const videoTrack = html5QrcodeScanner.getRunningTrack();
-          if (videoTrack && typeof videoTrack.getCapabilities === 'function') {
-            const capabilities = videoTrack.getCapabilities();
-            if (capabilities.zoom) {
-              const targetZoom = Math.min(capabilities.zoom.max, Math.max(capabilities.zoom.min, 1.5));
-              await videoTrack.applyConstraints({
-                advanced: [{ zoom: targetZoom }]
-              });
-            }
+        // ดึง Stream แบบบังคับความละเอียดสูง (HD/1080p) เพื่อให้รายละเอียด QR ชัดเจนที่สุด
+        const constraints = {
+          video: {
+            facingMode: { ideal: "environment" },
+            width: { ideal: 1920 },
+            height: { ideal: 1080 }
           }
-        } catch(zoomErr) {
-          console.log("Zoom not supported or applied:", zoomErr);
+        };
+
+        const videoElement = document.getElementById('videoScanner');
+        currentStream = await navigator.mediaDevices.getUserMedia(constraints);
+        videoElement.srcObject = currentStream;
+
+        // สั่งเปิด Hardware Zoom (ถ้ามือถือรองรับ) เพื่อช่วยขยายภาพ QR Code ขนาดเล็ก
+        const track = currentStream.getVideoTracks()[0];
+        const capabilities = track.getCapabilities ? track.getCapabilities() : {};
+        
+        if (capabilities.zoom) {
+          try {
+            await track.applyConstraints({
+              advanced: [{ zoom: Math.min(2.5, capabilities.zoom.max) }]
+            });
+          } catch(e) { }
         }
+
+        // เริ่มต้นการสแกนด้วย ZXing
+        codeReader.decodeFromVideoElement(videoElement, (result, err) => {
+          if (result) {
+            closeQrScanner();
+            processStudentTransaction(result.getText());
+          }
+        });
 
       } catch (err) {
-        console.warn("High-res camera start failed, trying fallback...", err);
-        
-        // Fallback Strategy ถ้าเบราว์เซอร์ไม่เล่นด้วยกับ Constraints
-        try {
-          await html5QrcodeScanner.start(
-            { facingMode: "environment" },
-            { fps: 10, qrbox: { width: 220, height: 220 } },
-            (decodedText) => {
-              closeQrScanner();
-              processStudentTransaction(decodedText);
-            },
-            (errorMessage) => { }
-          );
-        } catch (errFallback) {
-          console.error("Camera access failed completely:", errFallback);
-          Swal.fire({
-            icon: 'error',
-            title: 'ไม่สามารถเปิดกล้องได้',
-            text: 'กรุณาตรวจสอบการอนุญาตใช้งานกล้องบนเบราว์เซอร์'
-          });
-          closeQrScanner();
-        }
+        alert("ไม่สามารถเปิดกล้องได้: " + err);
+        closeQrScanner();
       }
     }
 
-    async function closeQrScanner() {
-      if (html5QrcodeScanner) {
-        try {
-          if (html5QrcodeScanner.isScanning) {
-            await html5QrcodeScanner.stop();
-          }
-          html5QrcodeScanner.clear();
-        } catch (err) {
-          console.warn("Error stopping QR Scanner:", err);
-        }
+    function closeQrScanner() {
+      if (codeReader) {
+        codeReader.reset();
+        codeReader = null;
+      }
+      if (currentStream) {
+        currentStream.getTracks().forEach(track => track.stop());
+        currentStream = null;
       }
       document.getElementById('qrModal').classList.add('hidden');
     }
@@ -649,7 +603,7 @@
     function handleFilterTypeChange(prefix) {
       const type = document.getElementById(`${prefix}FilterType`).value;
       const dateInput = document.getElementById(`${prefix}FilterDate`);
-      
+     
       if (type === 'all') {
         dateInput.disabled = true;
       } else {
@@ -676,7 +630,7 @@
       const filterValue = document.getElementById(`${prefix}FilterDate`).value;
 
       Swal.showLoading();
-      const res = await apiCall({ 
+      const res = await apiCall({
         action: 'getHistory',
         filterType: filterType,
         filterValue: filterValue
